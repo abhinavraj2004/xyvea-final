@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ChevronDown } from 'lucide-react';
+import { Logo } from '@/components/layout/logo';
 
 
 const navLinks = [
@@ -32,8 +32,7 @@ export default function Header() {
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-semibold">Xyvea</span>
-            <ChevronDown size={16} />
+            <Logo />
           </Link>
         </div>
 
