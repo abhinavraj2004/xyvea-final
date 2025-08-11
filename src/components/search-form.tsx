@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 export function SearchForm() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,19 +19,16 @@ export function SearchForm() {
   };
 
   return (
-    <form onSubmit={handleSearch} className="mt-8 flex w-full max-w-2xl flex-col items-center gap-4 sm:flex-row">
-      <div className="relative w-full">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-        <Input
-          type="search"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search for a concept to see its connections..."
-          className="w-full rounded-full bg-muted py-6 pl-12 pr-4 sm:pr-24"
-        />
-      </div>
-      <Button type="submit" size="lg" className="w-full shrink-0 sm:w-auto rounded-full">
-        Search
+    <form onSubmit={handleSearch} className="relative w-full">
+      <Input
+        type="search"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Ask about a concept and its connections..."
+        className="w-full rounded-lg bg-background border-border/50 shadow-lg py-6 pl-4 pr-14"
+      />
+      <Button type="submit" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md h-9 w-9">
+        <Send size={18}/>
       </Button>
     </form>
   );
