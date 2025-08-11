@@ -92,7 +92,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add a Causal Link</DialogTitle>
+          <DialogTitle>Propose a Causal Link</DialogTitle>
           <DialogDescription>
             Connect two concepts with a sourced cause-and-effect relationship.
           </DialogDescription>
@@ -168,7 +168,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
             {isVerifying && <p className="text-sm text-muted-foreground flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Analyzing source...</p>}
 
             {verificationResult && (
-              <Alert variant={verificationResult.error ? 'destructive' : 'default'}>
+              <Alert variant={verificationResult.error ? 'destructive' : 'destructive'}>
                 {verificationResult.error ? (
                   <XCircle className="h-4 w-4" />
                 ) : (

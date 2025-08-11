@@ -25,7 +25,7 @@ export default function Home() {
     <div className="flex-1 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-4xl text-center">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-          <span className="text-primary">Xyvea:</span> Unravel the 'Why'
+          <span className="text-primary">CausalCanvas:</span> Unravel the 'Why'
         </h1>
         <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
           A visual odyssey to chart the intricate web of cause and effect.
