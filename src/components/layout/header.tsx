@@ -36,13 +36,6 @@ export default function Header() {
             <Logo />
             <span className="text-xl font-bold">Xyvea</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-4">
-            {navLinks.map(link => (
-              <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
         </div>
 
         <div className="flex items-center gap-2">
@@ -67,6 +60,9 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/profile">Profile</Link>
                 </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                  <Link href="/contribute">Contribute</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
@@ -77,6 +73,9 @@ export default function Header() {
           ) : (
             <>
               <div className="hidden md:flex items-center gap-2">
+                 <Button variant="outline" asChild>
+                   <Link href="/contribute">Contribute</Link>
+                </Button>
                 <Button variant="ghost" onClick={toggleLogin}>
                   Log in
                 </Button>
@@ -96,11 +95,15 @@ export default function Header() {
                 <SheetContent side="right">
                   <div className="flex flex-col gap-4 pt-8">
                      <nav className="flex flex-col gap-4">
-                      {navLinks.map(link => (
-                        <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground transition-colors hover:text-primary">
-                          {link.label}
+                      {isLoggedIn ? (
+                         <Link href="/contribute" className="text-lg font-medium text-foreground transition-colors hover:text-primary">
+                          Contribute
                         </Link>
-                      ))}
+                      ) : (
+                        <Link href="/contribute" className="text-lg font-medium text-foreground transition-colors hover:text-primary">
+                          Contribute
+                        </Link>
+                      )}
                     </nav>
                     {!isLoggedIn && (
                        <div className="flex flex-col gap-2 pt-4 border-t">
