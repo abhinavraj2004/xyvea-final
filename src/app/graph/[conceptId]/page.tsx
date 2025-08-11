@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export default function GraphPage() {
   const router = useRouter();
   const params = useParams();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, toggleLogin } = useAuth();
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -21,9 +21,17 @@ export default function GraphPage() {
   const handleNewSearch = () => {
     router.push('/');
   };
+  
+  const handleProposeLinkClick = () => {
+    if (isLoggedIn) {
+      setIsLinkModalOpen(true);
+    } else {
+      toggleLogin();
+    }
+  };
 
   const ProposeLinkButton = () => (
-    <Button variant="outline" onClick={() => setIsLinkModalOpen(true)} disabled={!isLoggedIn}>
+    <Button variant="outline" onClick={handleProposeLinkClick}>
       <PlusCircle className="mr-2 h-4 w-4" />
       Propose Link
     </Button>
@@ -41,8 +49,7 @@ export default function GraphPage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    {/* The div wrapper is necessary for the tooltip to work on a disabled button */}
-                    <div className="cursor-not-allowed">
+                    <div className="cursor-pointer" onClick={handleProposeLinkClick}>
                       <ProposeLinkButton />
                     </div>
                   </TooltipTrigger>

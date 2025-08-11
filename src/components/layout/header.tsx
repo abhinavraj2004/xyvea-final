@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -11,29 +12,43 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
+import { Menu } from 'lucide-react';
 
 export default function Header() {
-  const { isLoggedIn, toggleLogin } = useAuth();
+  const { isLoggedIn, toggleLogin, setLoggedIn } = useAuth();
   const router = useRouter();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const handleContribute = () => {
-    router.push('/contribute');
+    if (isLoggedIn) {
+      router.push('/contribute');
+    } else {
+      toggleLogin();
+    }
+    setIsSheetOpen(false);
   };
 
   const handleSignIn = () => {
     router.push('/auth/signin');
-  }
+    setIsSheetOpen(false);
+  };
 
   const handleSignUp = () => {
     router.push('/auth/signup');
+    setIsSheetOpen(false);
+  };
+  
+  const handleLogout = () => {
+    toggleLogin();
+    setIsSheetOpen(false);
   }
 
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full">
       <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
@@ -42,10 +57,11 @@ export default function Header() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={handleContribute}>
-                Contribute
-            </Button>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-2">
+          <Button variant="ghost" onClick={handleContribute}>
+            Contribute
+          </Button>
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -71,19 +87,67 @@ export default function Header() {
                   <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={toggleLogin}>Log out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <>
-                <Button variant="ghost" onClick={handleSignIn}>
-                   Log in
-                </Button>
-                <Button onClick={handleSignUp}>
-                   Sign up
-                </Button>
+              <Button variant="ghost" onClick={handleSignIn}>
+                Log in
+              </Button>
+              <Button onClick={handleSignUp}>Sign up</Button>
             </>
           )}
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden">
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu />
+                <span className="sr-only">Open Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:w-[320px]">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center gap-2 border-b pb-4">
+                  <Logo />
+                  <span className="text-xl font-bold">Xyvea</span>
+                </div>
+                <div className="flex flex-col gap-4 py-4 flex-grow">
+                  <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
+                    Contribute
+                  </Button>
+                  {isLoggedIn && (
+                    <>
+                     <Link href="/profile" onClick={() => setIsSheetOpen(false)}>
+                        <Button variant="ghost" className="w-full justify-start text-lg">Profile</Button>
+                     </Link>
+                     <Link href="/settings" onClick={() => setIsSheetOpen(false)}>
+                        <Button variant="ghost" className="w-full justify-start text-lg">Settings</Button>
+                      </Link>
+                    </>
+                  )}
+                </div>
+
+                <div className="mt-auto border-t pt-4">
+                  {isLoggedIn ? (
+                    <Button className="w-full" onClick={handleLogout}>Log Out</Button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Button variant="outline" className="w-full" onClick={handleSignIn}>
+                        Log In
+                      </Button>
+                      <Button className="w-full" onClick={handleSignUp}>
+                        Sign Up
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
