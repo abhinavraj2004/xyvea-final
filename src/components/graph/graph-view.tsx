@@ -2,10 +2,17 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import { ArrowDown, ArrowUp, Info } from 'lucide-react';
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 type NodeData = {
   id: string;
@@ -13,7 +20,7 @@ type NodeData = {
 };
 
 type EdgeData = {
-  id: string;
+  id:string;
   source: string;
   target: string;
   status: 'verified' | 'pending' | 'disputed' | 'rejected';
@@ -69,17 +76,28 @@ const Node = ({ title, isCentral = false, onClick }: { title: string; isCentral?
 
 const EdgeBadge = ({ status, upvotes, downvotes }: Omit<EdgeData, 'id' | 'source' | 'target'>) => (
   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background p-2 rounded-lg border min-w-[150px] z-20">
-     <Badge variant="outline" className={cn("capitalize mb-2 w-full justify-center", statusColors[status])}>{status}</Badge>
-     <div className="flex justify-around items-center text-sm">
-        <div className="flex items-center gap-1 text-green-500">
-            <ArrowUp size={16} />
-            <span>{upvotes}</span>
-        </div>
-        <div className="flex items-center gap-1 text-red-500">
-            <ArrowDown size={16} />
-            <span>{downvotes}</span>
-        </div>
-     </div>
+    <div className="flex justify-center items-center gap-4 text-sm">
+      <div className="flex items-center gap-1 text-green-500">
+        <ArrowUp size={16} />
+        <span>{upvotes}</span>
+      </div>
+      <div className="flex items-center gap-1 text-red-500">
+        <ArrowDown size={16} />
+        <span>{downvotes}</span>
+      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="cursor-pointer text-muted-foreground hover:text-foreground">
+              <Info size={16} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="capitalize">Status: <span className={cn(statusColors[status], 'font-semibold')}>{status}</span></p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   </div>
 );
 
