@@ -1,10 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowDown, ArrowUp } from "lucide-react";
-import React from "react";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowDown, ArrowUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 type NodeData = {
   id: string;
@@ -20,7 +21,8 @@ type EdgeData = {
   downvotes: number;
 };
 
-const mockData = {
+const initialMockData = (centralConcept: string) => ({
+  centralNode: { id: 'central', title: centralConcept },
   causes: [
     { id: 'c1', title: 'Subprime Mortgages' },
     { id: 'c2', title: 'Deregulation' },
@@ -41,7 +43,8 @@ const mockData = {
     { id: 'ee2', source: 'central', target: 'e2', status: 'disputed', upvotes: 45, downvotes: 40 },
     { id: 'ee3', source: 'central', target: 'e3', status: 'rejected', upvotes: 15, downvotes: 30 },
   ],
-};
+});
+
 
 const statusColors: Record<EdgeData['status'], string> = {
   verified: 'border-green-500 text-green-500',
@@ -50,8 +53,11 @@ const statusColors: Record<EdgeData['status'], string> = {
   rejected: 'border-red-500 text-red-500',
 };
 
-const Node = ({ title, isCentral = false }: { title: string; isCentral?: boolean }) => (
-  <Card className={cn("w-64 text-center shadow-lg", isCentral && "bg-primary text-primary-foreground")}>
+const Node = ({ title, isCentral = false, onClick }: { title: string; isCentral?: boolean; onClick?: () => void }) => (
+  <Card 
+    className={cn("w-64 text-center shadow-lg transition-transform hover:scale-105 cursor-pointer", isCentral && "bg-primary text-primary-foreground scale-110")}
+    onClick={onClick}
+  >
     <CardContent className="p-4">
       <p className="font-semibold">{title}</p>
     </CardContent>
@@ -75,13 +81,26 @@ const EdgeBadge = ({ status, upvotes, downvotes }: Omit<EdgeData, 'id' | 'source
 );
 
 
-const GraphView = ({ centralConcept }: { centralConcept: string }) => {
+const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
+  const router = useRouter();
+  const initialConceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
+
+  const [mockData, setMockData] = useState(initialMockData(initialConceptName));
+
+  const handleNodeClick = (title: string) => {
+    // In a real app, you would fetch new data here.
+    // For now, we'll just simulate it by resetting the mock data with the new central concept.
+    const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
+    router.push(`/graph/${formattedTerm}`);
+    setMockData(initialMockData(title));
+  };
+  
   return (
     <div className="w-full min-h-[60vh] flex items-center justify-center p-4 rounded-lg bg-muted/20 border border-dashed relative overflow-hidden">
         <div className="flex items-center justify-between w-full max-w-6xl gap-8">
             {/* Causes Column */}
             <div className="flex flex-col gap-16">
-                {mockData.causes.map(node => <Node key={node.id} title={node.title}/>)}
+                {mockData.causes.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
             </div>
 
             {/* Edges and Central Node */}
@@ -90,7 +109,7 @@ const GraphView = ({ centralConcept }: { centralConcept: string }) => {
                 <div className="absolute inset-0">
                     <svg width="100%" height="100%" className="absolute">
                         {mockData.causes.map((_, index) => (
-                            <path key={`cause-line-${index}`} d={`M 0,${25 + index * 33}% C 50,${25 + index*33}% 50,50% 100,50%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                            <path key={`cause-line-${index}`} d={`M 0,${25 + index * 33}% C 50,${25 + index*33}% 50,50% 100,50%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2" />
                         ))}
                     </svg>
                      <div className="absolute left-[25%] top-[25%]"><EdgeBadge {...mockData.causeEdges[0]}/></div>
@@ -100,7 +119,7 @@ const GraphView = ({ centralConcept }: { centralConcept: string }) => {
             </div>
 
             <div className="flex flex-col gap-4 items-center">
-                 <Node title={centralConcept} isCentral />
+                 <Node title={mockData.centralNode.title} isCentral />
             </div>
 
             <div className="relative flex-1 h-full min-w-[200px] hidden md:block">
@@ -122,10 +141,10 @@ const GraphView = ({ centralConcept }: { centralConcept: string }) => {
 
             {/* Effects Column */}
             <div className="flex flex-col gap-16">
-                {mockData.effects.map(node => <Node key={node.id} title={node.title}/>)}
+                {mockData.effects.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
             </div>
         </div>
-         <p className="absolute bottom-4 text-center text-sm text-muted-foreground w-full">Note: This is a static visualization for demonstration purposes.</p>
+         <p className="absolute bottom-4 text-center text-sm text-muted-foreground w-full">Note: This is a static visualization for demonstration purposes. Click a node to explore.</p>
     </div>
   );
 };

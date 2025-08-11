@@ -24,14 +24,27 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const toggleLogin = () => setIsLoggedIn(!isLoggedIn);
 
+  const navLinks = [
+    { href: '/contribute', label: 'Contribute' },
+    { href: '/graph/climate-change', label: 'Graph' },
+    { href: '/table/climate-change', label: 'Table' },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <span className="text-xl font-bold">Xyvea</span>
           </Link>
+          <nav className="hidden md:flex items-center gap-4">
+            {navLinks.map(link => (
+              <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         <div className="flex items-center gap-2">
@@ -57,9 +70,6 @@ export default function Header() {
                   <Link href="/profile">Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/contribute">Contribute</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -69,34 +79,45 @@ export default function Header() {
           ) : (
             <>
               <div className="hidden md:flex items-center gap-2">
-                <Button variant="ghost" onClick={toggleLogin} className="hover:bg-white/10">
+                <Button variant="ghost" onClick={toggleLogin}>
                   Log in
                 </Button>
-                <Button onClick={toggleLogin} className="rounded-lg bg-white text-black hover:bg-gray-200">
+                <Button onClick={toggleLogin}>
                   Sign up
                 </Button>
               </div>
-              <div className="md:hidden">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Menu />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="right">
-                    <div className="flex flex-col gap-4 pt-8">
-                      <Button variant="outline" onClick={() => { toggleLogin(); }}>
-                        Log in
-                      </Button>
-                      <Button onClick={() => { toggleLogin(); }}>
-                        Sign up
-                      </Button>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
             </>
           )}
+           <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right">
+                  <div className="flex flex-col gap-4 pt-8">
+                     <nav className="flex flex-col gap-4">
+                      {navLinks.map(link => (
+                        <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground transition-colors hover:text-primary">
+                          {link.label}
+                        </Link>
+                      ))}
+                    </nav>
+                    {!isLoggedIn && (
+                       <div className="flex flex-col gap-2 pt-4 border-t">
+                        <Button variant="outline" onClick={() => { toggleLogin(); }}>
+                          Log in
+                        </Button>
+                        <Button onClick={() => { toggleLogin(); }}>
+                          Sign up
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
         </div>
       </div>
     </header>
