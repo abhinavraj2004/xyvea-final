@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowDown, ArrowUp, Info } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import {
@@ -28,29 +28,36 @@ type EdgeData = {
   downvotes: number;
 };
 
-const initialMockData = (centralConcept: string) => ({
-  centralNode: { id: 'central', title: centralConcept },
-  causes: [
-    { id: 'c1', title: 'Subprime Mortgages' },
-    { id: 'c2', title: 'Deregulation' },
-    { id: 'c3', title: 'Housing Bubble' },
-  ],
-  effects: [
-    { id: 'e1', title: 'Global Recession' },
-    { id: 'e2', title: 'Bank Failures' },
-    { id: 'e3', title: 'Government Bailouts' },
-  ],
-  causeEdges: [
-    { id: 'ce1', source: 'c1', target: 'central', status: 'verified', upvotes: 128, downvotes: 5 },
-    { id: 'ce2', source: 'c2', target: 'central', status: 'verified', upvotes: 97, downvotes: 12 },
-    { id: 'ce3', source: 'c3', target: 'central', status: 'pending', upvotes: 23, downvotes: 8 },
-  ],
-  effectEdges: [
-    { id: 'ee1', source: 'central', target: 'e1', status: 'verified', upvotes: 210, downvotes: 3 },
-    { id: 'ee2', source: 'central', target: 'e2', status: 'disputed', upvotes: 45, downvotes: 40 },
-    { id: 'ee3', source: 'central', target: 'e3', status: 'rejected', upvotes: 15, downvotes: 30 },
-  ],
-});
+const generateMockData = (centralConcept: string) => {
+  const conceptSeed = centralConcept.toLowerCase().replace(/\s/g, '');
+  const causes = [
+    { id: 'c1', title: `Precursor to ${centralConcept}` },
+    { id: 'c2', title: `Underlying factor for ${centralConcept}` },
+    { id: 'c3', title: `Catalyst for ${centralConcept}` },
+  ].map(c => ({...c, title: `${c.title} (${conceptSeed.substring(0,2)})`}));
+
+  const effects = [
+    { id: 'e1', title: `Consequence of ${centralConcept}` },
+    { id: 'e2', title: `Result of ${centralConcept}` },
+    { id: 'e3', title: `Aftermath of ${centralConcept}` },
+  ].map(e => ({...e, title: `${e.title} (${conceptSeed.substring(0,2)})`}));
+  
+  return {
+    centralNode: { id: 'central', title: centralConcept },
+    causes,
+    effects,
+    causeEdges: [
+      { id: 'ce1', source: 'c1', target: 'central', status: 'verified', upvotes: 128, downvotes: 5 },
+      { id: 'ce2', source: 'c2', target: 'central', status: 'pending', upvotes: 97, downvotes: 12 },
+      { id: 'ce3', source: 'c3', target: 'central', status: 'verified', upvotes: 23, downvotes: 8 },
+    ],
+    effectEdges: [
+      { id: 'ee1', source: 'central', target: 'e1', status: 'verified', upvotes: 210, downvotes: 3 },
+      { id: 'ee2', source: 'central', target: 'e2', status: 'disputed', upvotes: 45, downvotes: 40 },
+      { id: 'ee3', source: 'central', target: 'e3', status: 'rejected', upvotes: 15, downvotes: 30 },
+    ],
+  }
+};
 
 
 const statusColors: Record<EdgeData['status'], string> = {
@@ -106,43 +113,19 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   const router = useRouter();
   const initialConceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
 
-  const [mockData, setMockData] = useState(initialMockData(initialConceptName));
+  const mockData = useMemo(() => generateMockData(initialConceptName), [initialConceptName]);
 
   const handleNodeClick = (title: string) => {
-    // In a real app, you would fetch new data here.
-    // For now, we'll just simulate it by resetting the mock data with the new central concept.
     const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
     router.push(`/graph/${formattedTerm}`);
-    setMockData(initialMockData(title));
   };
   
   return (
     <div className="w-full min-h-[60vh] flex items-center justify-center p-4 rounded-lg bg-muted/20 border border-dashed relative overflow-x-auto">
         <div className="flex items-center justify-between w-full max-w-7xl gap-8 px-4">
-            {/* Effects Column */}
+            {/* Causes Column */}
             <div className="flex flex-col gap-16">
-                {mockData.effects.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
-            </div>
-
-            {/* Edges from Central to Effects */}
-            <div className="relative flex-1 h-full min-w-[200px] hidden md:block">
-                <svg width="100%" height="100%" className="absolute">
-                    <defs>
-                        <marker id="arrow-effect" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--border))" />
-                        </marker>
-                    </defs>
-                    {mockData.effects.map((_, index) => (
-                        <path key={`effect-line-${index}`} d={`M 0,50% C 50,50% 50,${25 + index*33}% 100,${25 + index*33}%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow-effect)"/>
-                    ))}
-                </svg>
-                 <div className="absolute left-[75%] top-[25%]"><EdgeBadge {...mockData.effectEdges[0]}/></div>
-                 <div className="absolute left-[75%] top-[58%]"><EdgeBadge {...mockData.effectEdges[1]}/></div>
-                 <div className="absolute left-[75%] top-[91%]"><EdgeBadge {...mockData.effectEdges[2]}/></div>
-            </div>
-
-            <div className="flex flex-col gap-4 items-center">
-                 <Node title={mockData.centralNode.title} isCentral />
+                {mockData.causes.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
             </div>
 
             {/* Edges from Causes to Central */}
@@ -162,9 +145,30 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
                  <div className="absolute left-[25%] top-[91%]"><EdgeBadge {...mockData.causeEdges[2]}/></div>
             </div>
 
-            {/* Causes Column */}
+            <div className="flex flex-col gap-4 items-center">
+                 <Node title={mockData.centralNode.title} isCentral />
+            </div>
+
+            {/* Edges from Central to Effects */}
+            <div className="relative flex-1 h-full min-w-[200px] hidden md:block">
+                <svg width="100%" height="100%" className="absolute">
+                    <defs>
+                        <marker id="arrow-effect" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--border))" />
+                        </marker>
+                    </defs>
+                    {mockData.effects.map((_, index) => (
+                        <path key={`effect-line-${index}`} d={`M 0,50% C 50,50% 50,${25 + index*33}% 100,${25 + index*33}%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow-effect)"/>
+                    ))}
+                </svg>
+                 <div className="absolute left-[75%] top-[25%]"><EdgeBadge {...mockData.effectEdges[0]}/></div>
+                 <div className="absolute left-[75%] top-[58%]"><EdgeBadge {...mockData.effectEdges[1]}/></div>
+                 <div className="absolute left-[75%] top-[91%]"><EdgeBadge {...mockData.effectEdges[2]}/></div>
+            </div>
+
+            {/* Effects Column */}
             <div className="flex flex-col gap-16">
-                {mockData.causes.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
+                {mockData.effects.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
             </div>
         </div>
          <p className="absolute bottom-4 text-center text-sm text-muted-foreground w-full">Note: This is a static visualization for demonstration purposes. Click a node to explore.</p>

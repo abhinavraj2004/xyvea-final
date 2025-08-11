@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -18,18 +18,23 @@ import { Card } from '@/components/ui/card';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 
 
-const mockData = {
-  causes: [
-    { id: 'c1', title: 'Subprime Mortgages', status: 'verified', upvotes: 128, downvotes: 5, description: 'Widespread issuance of high-risk mortgages to borrowers with poor credit history.', sourceURL: 'https://www.investopedia.com/terms/s/subprime_mortgage.asp' },
-    { id: 'c2', title: 'Deregulation', status: 'verified', upvotes: 97, downvotes: 12, description: 'The Gramm-Leach-Bliley Act and others reduced regulatory oversight of financial institutions.', sourceURL: 'https://www.thebalancemoney.com/gramm-leach-bliley-act-3305881' },
-    { id: 'c3', title: 'Housing Bubble', status: 'pending', upvotes: 23, downvotes: 8, description: 'A rapid increase in housing prices, fueled by speculation and loose lending standards.', sourceURL: 'https://www.investopedia.com/terms/h/housing_bubble.asp' },
-  ],
-  effects: [
-    { id: 'e1', title: 'Global Recession', status: 'verified', upvotes: 210, downvotes: 3, description: 'The financial crisis triggered a severe economic downturn felt across the world.', sourceURL: 'https://www.imf.org/external/pubs/ft/weo/2009/01/pdf/text.pdf' },
-    { id: 'e2', title: 'Bank Failures', status: 'disputed', upvotes: 45, downvotes: 40, description: 'Many major financial institutions collapsed or required government bailouts, like Lehman Brothers.', sourceURL: 'https://www.federalreservehistory.org/essays/lehman-brothers-bankruptcy' },
-    { id: 'e3', title: 'Government Bailouts', status: 'rejected', upvotes: 15, downvotes: 30, description: 'Governments worldwide injected trillions of dollars into the financial system to prevent a total collapse.', sourceURL: 'https://www.investopedia.com/terms/b/bailout.asp' },
-  ],
+const generateMockData = (conceptName: string) => {
+  const conceptSeed = conceptName.toLowerCase().replace(/\s/g, '');
+  const causes = [
+    { id: 'c1', title: `Precursor to ${conceptName}`, status: 'verified', upvotes: 128, downvotes: 5, description: `A description for the precursor to ${conceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'c2', title: `Underlying factor for ${conceptName}`, status: 'pending', upvotes: 97, downvotes: 12, description: `A description for an underlying factor for ${conceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'c3', title: `Catalyst for ${conceptName}`, status: 'verified', upvotes: 23, downvotes: 8, description: `A description for a catalyst for ${conceptName}.`, sourceURL: 'https://example.com/source' },
+  ].map(c => ({...c, title: `${c.title} (${conceptSeed.substring(0,2)})`}));
+  
+  const effects = [
+    { id: 'e1', title: `Consequence of ${conceptName}`, status: 'verified', upvotes: 210, downvotes: 3, description: `A description for a consequence of ${conceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'e2', title: `Result of ${conceptName}`, status: 'disputed', upvotes: 45, downvotes: 40, description: `A description for a result of ${conceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'e3', title: `Aftermath of ${conceptName}`, status: 'rejected', upvotes: 15, downvotes: 30, description: `A description for the aftermath of ${conceptName}.`, sourceURL: 'https://example.com/source' },
+  ].map(e => ({...e, title: `${e.title} (${conceptSeed.substring(0,2)})`}));
+
+  return { causes, effects };
 };
+
 
 const statusColors: Record<string, string> = {
   verified: 'border-green-500 text-green-500',
@@ -43,6 +48,9 @@ export default function TablePage() {
   const params = useParams();
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
+  
+  const mockData = useMemo(() => generateMockData(conceptName), [conceptName]);
+
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
