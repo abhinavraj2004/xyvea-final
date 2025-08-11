@@ -29,16 +29,17 @@ type EdgeData = {
 };
 
 const generateMockData = (centralConcept: string) => {
+  const cleanConceptName = centralConcept.replace(/ \(.+\)$/, '');
   const causes = [
-    { id: 'c1', title: `Precursor to ${centralConcept}` },
-    { id: 'c2', title: `Underlying factor for ${centralConcept}` },
-    { id: 'c3', title: `Catalyst for ${centralConcept}` },
+    { id: 'c1', title: `Precursor to ${cleanConceptName}` },
+    { id: 'c2', title: `Underlying factor for ${cleanConceptName}` },
+    { id: 'c3', title: `Catalyst for ${cleanConceptName}` },
   ];
 
   const effects = [
-    { id: 'e1', title: `Consequence of ${centralConcept}` },
-    { id: 'e2', title: `Result of ${centralConcept}` },
-    { id: 'e3', title: `Aftermath of ${centralConcept}` },
+    { id: 'e1', title: `Consequence of ${cleanConceptName}` },
+    { id: 'e2', title: `Result of ${cleanConceptName}` },
+    { id: 'e3', title: `Aftermath of ${cleanConceptName}` },
   ];
   
   return {

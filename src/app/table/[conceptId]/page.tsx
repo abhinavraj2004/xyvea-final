@@ -19,16 +19,17 @@ import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 
 
 const generateMockData = (conceptName: string) => {
+  const cleanConceptName = conceptName.replace(/ \(.+\)$/, '');
   const causes = [
-    { id: 'c1', title: `Precursor to ${conceptName}`, status: 'verified', upvotes: 128, downvotes: 5, description: `A description for the precursor to ${conceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'c2', title: `Underlying factor for ${conceptName}`, status: 'pending', upvotes: 97, downvotes: 12, description: `A description for an underlying factor for ${conceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'c3', title: `Catalyst for ${conceptName}`, status: 'verified', upvotes: 23, downvotes: 8, description: `A description for a catalyst for ${conceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'c1', title: `Precursor to ${cleanConceptName}`, status: 'verified', upvotes: 128, downvotes: 5, description: `A description for the precursor to ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'c2', title: `Underlying factor for ${cleanConceptName}`, status: 'pending', upvotes: 97, downvotes: 12, description: `A description for an underlying factor for ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'c3', title: `Catalyst for ${cleanConceptName}`, status: 'verified', upvotes: 23, downvotes: 8, description: `A description for a catalyst for ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
   ];
   
   const effects = [
-    { id: 'e1', title: `Consequence of ${conceptName}`, status: 'verified', upvotes: 210, downvotes: 3, description: `A description for a consequence of ${conceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'e2', title: `Result of ${conceptName}`, status: 'disputed', upvotes: 45, downvotes: 40, description: `A description for a result of ${conceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'e3', title: `Aftermath of ${conceptName}`, status: 'rejected', upvotes: 15, downvotes: 30, description: `A description for the aftermath of ${conceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'e1', title: `Consequence of ${cleanConceptName}`, status: 'verified', upvotes: 210, downvotes: 3, description: `A description for a consequence of ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'e2', title: `Result of ${cleanConceptName}`, status: 'disputed', upvotes: 45, downvotes: 40, description: `A description for a result of ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
+    { id: 'e3', title: `Aftermath of ${cleanConceptName}`, status: 'rejected', upvotes: 15, downvotes: 30, description: `A description for the aftermath of ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
   ];
 
   return { causes, effects };
