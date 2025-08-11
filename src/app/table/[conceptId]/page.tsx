@@ -24,12 +24,12 @@ const generateMockData = (conceptId: string) => {
 
   const createItems = (prefixes: string[], count: number, offset: number) => {
     return Array.from({ length: count }, (_, i) => {
-      const prefix = prefixes[(seed + i * offset) % prefixes.length];
+      const prefix = prefixes[(seed + i * offset) % prefixes.length] || "Related to";
       const baseTitle = conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "");
       const title = `${prefix} ${baseTitle}`;
       const titleHash = hashCode(title + i);
       return {
-        id: `${prefix[0].toLowerCase()}${i}`,
+        id: `${(prefix[0] || 'r').toLowerCase()}${i}`,
         title,
         status: statuses[(seed + i * offset) % statuses.length],
         upvotes: Math.abs(titleHash) % 200,
@@ -47,10 +47,10 @@ const generateMockData = (conceptId: string) => {
 };
 
 const statusStyles: Record<string, { bg: string; text: string }> = {
-  verified: { bg: 'bg-green-500/20', text: 'text-green-700 dark:text-green-400' },
-  disputed: { bg: 'bg-yellow-500/20', text: 'text-yellow-700 dark:text-yellow-400' },
-  pending: { bg: 'bg-gray-500/20', text: 'text-gray-700 dark:text-gray-400' },
-  rejected: { bg: 'bg-red-500/20', text: 'text-red-700 dark:text-red-400' },
+  verified: { bg: 'bg-green-500/20 text-green-900 dark:text-green-300', text: 'text-green-700 dark:text-green-400' },
+  disputed: { bg: 'bg-yellow-500/20 text-yellow-900 dark:text-yellow-300', text: 'text-yellow-700 dark:text-yellow-400' },
+  pending: { bg: 'bg-gray-500/20 text-gray-900 dark:text-gray-300', text: 'text-gray-700 dark:text-gray-400' },
+  rejected: { bg: 'bg-red-500/20 text-red-900 dark:text-red-300', text: 'text-red-700 dark:text-red-400' },
 };
 
 export default function TablePage() {
