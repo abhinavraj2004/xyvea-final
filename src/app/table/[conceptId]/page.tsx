@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, Fragment } from 'react';
@@ -14,8 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, LinkIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ArrowDown, ArrowUp, LinkIcon, PlusCircle } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
+
 
 const mockData = {
   causes: [
@@ -43,6 +44,8 @@ export default function TablePage() {
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+
 
   const handleNewSearch = () => {
     router.push('/');
@@ -117,12 +120,17 @@ export default function TablePage() {
   );
 
   return (
+    <>
     <div className="container mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-semibold capitalize tracking-tight">
           Exploring: <span className="text-primary">{conceptName}</span>
         </h1>
         <div className="flex items-center gap-2">
+           <Button variant="outline" onClick={() => setIsLinkModalOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Propose Link
+          </Button>
           <Link href={`/graph/${conceptId}`}>
             <Button variant="outline">Graph View</Button>
           </Link>
@@ -136,5 +144,7 @@ export default function TablePage() {
         {renderTable('Effects', mockData.effects)}
       </div>
     </div>
+    <AddCausalLinkModal isOpen={isLinkModalOpen} onOpenChange={setIsLinkModalOpen} />
+    </>
   );
 }
