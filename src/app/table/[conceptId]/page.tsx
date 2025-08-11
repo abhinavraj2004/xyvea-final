@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import {
   Table,
   TableBody,
@@ -71,8 +71,8 @@ export default function TablePage() {
           </TableHeader>
           <TableBody>
             {data.map((item) => (
-              <>
-                <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRow(item.id)}>
+              <Fragment key={item.id}>
+                <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRow(item.id)}>
                   <TableCell className="font-medium hover:underline" onClick={(e) => { e.stopPropagation(); handleConceptClick(item.title); }}>{item.title}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={statusColors[item.status]}>
@@ -108,7 +108,7 @@ export default function TablePage() {
                     </TableCell>
                   </TableRow>
                 )}
-              </>
+              </Fragment>
             ))}
           </TableBody>
         </Table>
@@ -138,4 +138,3 @@ export default function TablePage() {
     </div>
   );
 }
-
