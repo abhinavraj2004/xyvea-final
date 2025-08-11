@@ -36,7 +36,7 @@ export default function Header() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <Logo />
-            <span className="text-xl font-bold">CausalCanvas</span>
+            <span className="text-xl font-bold">Xyvea</span>
           </Link>
           <nav className="hidden md:flex items-center gap-4">
             {navLinks.map(link => (
