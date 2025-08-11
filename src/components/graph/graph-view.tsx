@@ -32,7 +32,7 @@ type NodeData = {
 };
 
 type EdgeData = {
-  id: string;
+  id:string;
   source: string;
   target: string;
   status: 'verified' | 'pending' | 'disputed' | 'rejected';
@@ -62,8 +62,20 @@ const generateMockData = (centralConceptId: string) => {
     const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
     const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
     
-    const causes: NodeData[] = Array.from({ length: 3 }, (_, i) => ({ id: `c${i}`, title: `${causePrefixes[(seed + i * 3) % causePrefixes.length]} ${conceptName}`, type: 'cause' }));
-    const effects: NodeData[] = Array.from({ length: 4 }, (_, i) => ({ id: `e${i}`, title: `${effectPrefixes[(seed + i * 5) % effectPrefixes.length]} ${conceptName}`, type: 'effect' }));
+    const createItems = (prefixes: string[], count: number, offset: number) => {
+        return Array.from({ length: count }, (_, i) => {
+            const prefix = prefixes[(seed + i * offset) % prefixes.length] || "Related to";
+            const baseTitle = conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "");
+            const title = `${prefix} ${baseTitle}`;
+            return { title };
+        });
+    };
+    
+    const causesData = createItems(causePrefixes, 3, 3);
+    const effectsData = createItems(effectPrefixes, 4, 5);
+
+    const causes: NodeData[] = causesData.map((d, i) => ({ id: `c${i}`, title: d.title, type: 'cause' }));
+    const effects: NodeData[] = effectsData.map((d, i) => ({ id: `e${i}`, title: d.title, type: 'effect' }));
     const centralNode: NodeData = { id: 'central', title: conceptName, type: 'central' };
 
     const nodes = [centralNode, ...causes, ...effects];
@@ -103,7 +115,7 @@ const Node = ({ node, onClick }: { node: D3Node; onClick: (title: string) => voi
                   ? "bg-primary text-primary-foreground border-blue-400 text-base font-bold" 
                   : "bg-card border-border text-sm"
             )}>
-               <span className="font-semibold">{node.title}</span>
+               <span className="font-semibold capitalize">{node.title}</span>
             </div>
         </foreignObject>
     );
@@ -185,17 +197,29 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
     const simulationNodes: D3Node[] = initialNodes.map(node => ({...node}));
     const simulationLinks: D3Link[] = initialEdges.map(edge => ({...edge, source: edge.source, target: edge.target}));
     
-    simulationNodes.find(n => n.type === 'central')!.fx = width / 2;
-    simulationNodes.find(n => n.type === 'central')!.fy = height / 2;
+    const centralNode = simulationNodes.find(n => n.type === 'central');
+    if (centralNode) {
+        centralNode.fx = width / 2;
+        centralNode.fy = height / 2;
+    }
     
     const simulation: Simulation<D3Node, D3Link> = forceSimulation(simulationNodes)
         .force('link', forceLink<D3Node, D3Link>(simulationLinks).id(d => d.id).distance(180))
         .force('charge', forceManyBody().strength(-800))
         .force('x', forceX<D3Node>(d => {
             if (d.type === 'central') return width / 2;
+            const isMobile = width < 768; // md breakpoint
+            if (isMobile) return width / 2; // Stack vertically on mobile
             return d.type === 'cause' ? width / 4 : (width * 3) / 4;
         }).strength(1))
-        .force('y', forceY(height / 2).strength(0.1))
+        .force('y', forceY<D3Node>(d => {
+            const isMobile = width < 768;
+            if (isMobile) {
+                if (d.type === 'central') return height / 2;
+                return d.type === 'cause' ? height / 4 : (height * 3) / 4;
+            }
+            return height / 2;
+        }).strength(isMobile => isMobile ? 0.5 : 0.1))
         .force('center', forceCenter(width / 2, height / 2));
 
     simulation.on('tick', () => {
