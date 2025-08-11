@@ -18,19 +18,46 @@ import { Card } from '@/components/ui/card';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 
 
-const generateMockData = (conceptName: string) => {
-  const cleanConceptName = conceptName.replace(/ \(.+\)$/, '');
-  const causes = [
-    { id: 'c1', title: `Precursor to ${cleanConceptName}`, status: 'verified', upvotes: 128, downvotes: 5, description: `A description for the precursor to ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'c2', title: `Underlying factor for ${cleanConceptName}`, status: 'pending', upvotes: 97, downvotes: 12, description: `A description for an underlying factor for ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'c3', title: `Catalyst for ${cleanConceptName}`, status: 'verified', upvotes: 23, downvotes: 8, description: `A description for a catalyst for ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
-  ];
+const generateMockData = (conceptId: string) => {
+  const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
+
+  // A simple hash function to get a number from a string, for variety
+  const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
+  const seed = hashCode(conceptName);
   
-  const effects = [
-    { id: 'e1', title: `Consequence of ${cleanConceptName}`, status: 'verified', upvotes: 210, downvotes: 3, description: `A description for a consequence of ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'e2', title: `Result of ${cleanConceptName}`, status: 'disputed', upvotes: 45, downvotes: 40, description: `A description for a result of ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
-    { id: 'e3', title: `Aftermath of ${cleanConceptName}`, status: 'rejected', upvotes: 15, downvotes: 30, description: `A description for the aftermath of ${cleanConceptName}.`, sourceURL: 'https://example.com/source' },
-  ];
+  const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
+  const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
+  const statuses = ['verified', 'pending', 'disputed', 'rejected'];
+
+  const causes = Array.from({ length: 3 }, (_, i) => {
+    const prefix = causePrefixes[(seed + i * 3) % causePrefixes.length];
+    const title = `${prefix} ${conceptName}`;
+    const titleHash = hashCode(title);
+    return {
+      id: `c${i}`,
+      title,
+      status: statuses[(seed + i) % statuses.length],
+      upvotes: Math.abs(titleHash) % 200,
+      downvotes: Math.abs(titleHash) % 50,
+      description: `A mock description explaining how ${title.toLowerCase()} could be a factor for ${conceptName.toLowerCase()}.`,
+      sourceURL: 'https://example.com/mock-source',
+    };
+  });
+
+  const effects = Array.from({ length: 3 }, (_, i) => {
+    const prefix = effectPrefixes[(seed + i * 5) % effectPrefixes.length];
+    const title = `${prefix} ${conceptName}`;
+    const titleHash = hashCode(title);
+    return {
+      id: `e${i}`,
+      title,
+      status: statuses[(seed + i + 1) % statuses.length],
+      upvotes: Math.abs(titleHash) % 250,
+      downvotes: Math.abs(titleHash) % 40,
+      description: `A mock description explaining how ${conceptName.toLowerCase()} could lead to ${title.toLowerCase()}.`,
+      sourceURL: 'https://example.com/mock-source',
+    };
+  });
 
   return { causes, effects };
 };
@@ -49,7 +76,7 @@ export default function TablePage() {
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   
-  const mockData = useMemo(() => generateMockData(conceptName), [conceptName]);
+  const mockData = useMemo(() => generateMockData(conceptId), [conceptId]);
 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);

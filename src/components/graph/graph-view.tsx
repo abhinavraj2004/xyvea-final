@@ -28,35 +28,49 @@ type EdgeData = {
   downvotes: number;
 };
 
-const generateMockData = (centralConcept: string) => {
-  const cleanConceptName = centralConcept.replace(/ \(.+\)$/, '');
-  const causes = [
-    { id: 'c1', title: `Precursor to ${cleanConceptName}` },
-    { id: 'c2', title: `Underlying factor for ${cleanConceptName}` },
-    { id: 'c3', title: `Catalyst for ${cleanConceptName}` },
-  ];
+const generateMockData = (centralConceptId: string) => {
+  const conceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
 
-  const effects = [
-    { id: 'e1', title: `Consequence of ${cleanConceptName}` },
-    { id: 'e2', title: `Result of ${cleanConceptName}` },
-    { id: 'e3', title: `Aftermath of ${cleanConceptName}` },
-  ];
+  // A simple hash function to get a number from a string, for variety
+  const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
+  const seed = hashCode(conceptName);
+
+  const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
+  const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
+
+  const causes: NodeData[] = Array.from({ length: 3 }, (_, i) => {
+    const prefix = causePrefixes[(seed + i * 3) % causePrefixes.length];
+    return { id: `c${i}`, title: `${prefix} ${conceptName}` };
+  });
+
+  const effects: NodeData[] = Array.from({ length: 3 }, (_, i) => {
+    const prefix = effectPrefixes[(seed + i * 5) % effectPrefixes.length];
+    return { id: `e${i}`, title: `${prefix} ${conceptName}` };
+  });
   
+  const statuses: EdgeData['status'][] = ['verified', 'pending', 'disputed', 'rejected'];
+
   return {
-    centralNode: { id: 'central', title: centralConcept },
+    centralNode: { id: 'central', title: conceptName },
     causes,
     effects,
-    causeEdges: [
-      { id: 'ce1', source: 'c1', target: 'central', status: 'verified', upvotes: 128, downvotes: 5 },
-      { id: 'ce2', source: 'c2', target: 'central', status: 'pending', upvotes: 97, downvotes: 12 },
-      { id: 'ce3', source: 'c3', target: 'central', status: 'verified', upvotes: 23, downvotes: 8 },
-    ],
-    effectEdges: [
-      { id: 'ee1', source: 'central', target: 'e1', status: 'verified', upvotes: 210, downvotes: 3 },
-      { id: 'ee2', source: 'central', target: 'e2', status: 'disputed', upvotes: 45, downvotes: 40 },
-      { id: 'ee3', source: 'central', target: 'e3', status: 'rejected', upvotes: 15, downvotes: 30 },
-    ],
-  }
+    causeEdges: causes.map((c, i) => ({
+      id: `ce${i}`,
+      source: c.id,
+      target: 'central',
+      status: statuses[(seed + i) % statuses.length],
+      upvotes: Math.abs(hashCode(c.title)) % 200,
+      downvotes: Math.abs(hashCode(c.title)) % 50,
+    })),
+    effectEdges: effects.map((e, i) => ({
+      id: `ee${i}`,
+      source: 'central',
+      target: e.id,
+      status: statuses[(seed + i + 1) % statuses.length],
+      upvotes: Math.abs(hashCode(e.title)) % 250,
+      downvotes: Math.abs(hashCode(e.title)) % 40,
+    })),
+  };
 };
 
 
@@ -111,9 +125,8 @@ const EdgeBadge = ({ status, upvotes, downvotes }: Omit<EdgeData, 'id' | 'source
 
 const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   const router = useRouter();
-  const initialConceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
 
-  const mockData = useMemo(() => generateMockData(initialConceptName), [initialConceptName]);
+  const mockData = useMemo(() => generateMockData(centralConceptId), [centralConceptId]);
 
   const handleNodeClick = (title: string) => {
     const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
