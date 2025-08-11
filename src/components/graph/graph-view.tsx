@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,7 +32,6 @@ type EdgeData = {
 const generateMockData = (centralConceptId: string) => {
   const conceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
 
-  // A simple hash function to get a number from a string, for variety
   const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
   const seed = hashCode(conceptName);
 
@@ -83,20 +83,22 @@ const statusColors: Record<EdgeData['status'], string> = {
 
 const Node = ({ title, isCentral = false, onClick }: { title: string; isCentral?: boolean; onClick?: () => void }) => (
     <div 
-        className={cn("flex flex-col items-center gap-2 cursor-pointer group", isCentral && 'z-10')}
+        className={cn("flex items-center justify-center cursor-pointer group z-10", isCentral && 'transform scale-125')}
         onClick={onClick}
     >
         <div className={cn(
-            "w-24 h-24 rounded-full flex items-center justify-center text-center p-2 shadow-lg transition-transform group-hover:scale-105 border-2",
-            isCentral ? "bg-primary text-primary-foreground border-primary-foreground/50 scale-110 md:scale-125" : "bg-card border-border"
+            "rounded-lg p-4 shadow-lg transition-all group-hover:shadow-xl group-hover:-translate-y-1 border-2 text-center",
+            isCentral 
+              ? "bg-primary text-primary-foreground border-blue-400 min-w-[200px] min-h-[100px] flex items-center justify-center text-lg font-bold" 
+              : "bg-card border-border w-48 h-24 flex items-center justify-center"
         )}>
-           <span className="text-sm font-semibold">{title}</span>
+           <span className="font-semibold">{title}</span>
         </div>
     </div>
 );
 
 const EdgeBadge = ({ status, upvotes, downvotes }: Omit<EdgeData, 'id' | 'source' | 'target'>) => (
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background p-2 rounded-lg border min-w-[150px] z-20">
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background p-2 rounded-lg border min-w-[150px] z-20 shadow-lg">
     <div className="flex justify-center items-center gap-4 text-sm">
       <div className="flex items-center gap-1 text-green-500">
         <ArrowUp size={16} />
@@ -134,73 +136,62 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   };
   
   return (
-    <div className="w-full min-h-[60vh] flex items-center justify-center p-4 rounded-lg bg-muted/20 border border-dashed relative overflow-x-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between w-full max-w-7xl gap-8 md:gap-4 px-4">
+    <div className="w-full min-h-[70vh] flex items-center justify-center p-4 rounded-lg bg-[radial-gradient(hsl(var(--muted-foreground)/0.1)_1px,transparent_1px)] [background-size:16px_16px] border relative overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-around w-full max-w-7xl gap-8 md:gap-16 px-4">
+            
             {/* Causes Column */}
-            <div className="flex flex-row md:flex-col gap-8 md:gap-16">
+            <div className="flex flex-row md:flex-col gap-8 md:gap-24">
                 {mockData.causes.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
             </div>
 
-            {/* Edges from Causes to Central */}
-            <div className="relative w-full h-24 md:h-full md:flex-1 min-w-0 md:min-w-[200px]">
-                <svg width="100%" height="100%" className="absolute">
-                     <defs>
-                        <marker id="arrow-cause" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--border))" />
-                        </marker>
-                    </defs>
-                    {/* Mobile lines */}
-                    <g className="md:hidden">
-                        {mockData.causes.map((_, index) => (
-                             <path key={`cause-line-mobile-${index}`} d={`M ${18 + index * 33}%,0 C ${18 + index * 33}%,50% 50%,50% 50%,100%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2"  markerEnd="url(#arrow-cause)"/>
-                        ))}
-                    </g>
-                     {/* Desktop lines */}
-                    <g className="hidden md:block">
-                        {mockData.causes.map((_, index) => (
-                            <path key={`cause-line-desktop-${index}`} d={`M 0,${25 + index * 33}% C 50,${25 + index*33}% 50,50% 100,50%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2"  markerEnd="url(#arrow-cause)"/>
-                        ))}
-                    </g>
-                </svg>
-                 <div className="absolute left-1/2 -translate-x-1/2 top-[10%] md:left-[25%] md:top-[25%] md:-translate-x-0"><EdgeBadge {...mockData.causeEdges[0]}/></div>
-                 <div className="absolute left-1/2 -translate-x-1/2 top-[43%] md:left-[25%] md:top-[58%] md:-translate-x-0"><EdgeBadge {...mockData.causeEdges[1]}/></div>
-                 <div className="absolute left-1/2 -translate-x-1/2 top-[76%] md:left-[25%] md:top-[91%] md:-translate-x-0"><EdgeBadge {...mockData.causeEdges[2]}/></div>
-            </div>
-
+            {/* Central Node */}
             <div className="flex flex-col gap-4 items-center order-first md:order-none my-8 md:my-0">
                  <Node title={mockData.centralNode.title} isCentral />
             </div>
 
-            {/* Edges from Central to Effects */}
-            <div className="relative w-full h-24 md:h-full md:flex-1 min-w-0 md:min-w-[200px]">
-                <svg width="100%" height="100%" className="absolute">
-                    <defs>
-                        <marker id="arrow-effect" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            {/* Effects Column */}
+            <div className="flex flex-row md:flex-col gap-8 md:gap-24">
+                {mockData.effects.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
+            </div>
+
+            {/* SVG Edges Layer */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <svg width="100%" height="100%">
+                     <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                         <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--border))" />
                         </marker>
                     </defs>
-                    {/* Mobile lines */}
-                     <g className="md:hidden">
-                        {mockData.effects.map((_, index) => (
-                             <path key={`effect-line-mobile-${index}`} d={`M 50%,0 C 50%,50% ${18 + index * 33}%,50% ${18 + index * 33}%,100%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow-effect)"/>
-                        ))}
-                    </g>
-                    {/* Desktop lines */}
+                    
+                    {/* Desktop Edges */}
                     <g className="hidden md:block">
-                        {mockData.effects.map((_, index) => (
-                            <path key={`effect-line-desktop-${index}`} d={`M 0,50% C 50,50% 50,${25 + index*33}% 100,${25 + index*33}%`} stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow-effect)"/>
-                        ))}
+                        {/* Cause Edges */}
+                        <path d="M 20%,20% C 35%,20% 35%,50% 45%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 20%,50% C 35%,50% 35%,50% 45%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 20%,80% C 35%,80% 35%,50% 45%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        
+                        {/* Effect Edges */}
+                        <path d="M 55%,50% C 65%,50% 65%,20% 80%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 55%,50% C 65%,50% 65%,50% 80%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 55%,50% C 65%,50% 65%,80% 80%,80%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                    </g>
+                    
+                     {/* Mobile Edges */}
+                    <g className="md:hidden">
+                        {/* Cause Edges */}
+                        <path d="M 25%,80% C 25%,65% 50%,65% 50%,55%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 50%,80% C 50%,65% 50%,65% 50%,55%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 75%,80% C 75%,65% 50%,65% 50%,55%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+
+                        {/* Effect Edges */}
+                        <path d="M 50%,45% C 50%,35% 25%,35% 25%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 50%,45% C 50%,35% 50%,35% 50%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
+                        <path d="M 50%,45% C 50%,35% 75%,35% 75%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
                     </g>
                 </svg>
-                 <div className="absolute left-1/2 -translate-x-1/2 top-[10%] md:left-[75%] md:top-[25%] md:-translate-x-full"><EdgeBadge {...mockData.effectEdges[0]}/></div>
-                 <div className="absolute left-1/2 -translate-x-1/2 top-[43%] md:left-[75%] md:top-[58%] md:-translate-x-full"><EdgeBadge {...mockData.effectEdges[1]}/></div>
-                 <div className="absolute left-1/2 -translate-x-1/2 top-[76%] md:left-[75%] md:top-[91%] md:-translate-x-full"><EdgeBadge {...mockData.effectEdges[2]}/></div>
             </div>
-
-            {/* Effects Column */}
-            <div className="flex flex-row md:flex-col gap-8 md:gap-16">
-                {mockData.effects.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
-            </div>
+             <div className="absolute top-[calc(50%-1.5rem)] left-[calc(35%)] pointer-events-auto hidden md:block"><EdgeBadge {...mockData.causeEdges[1]}/></div>
+             <div className="absolute top-[calc(50%-1.5rem)] right-[calc(35%)] pointer-events-auto hidden md:block"><EdgeBadge {...mockData.effectEdges[1]}/></div>
         </div>
          <p className="absolute bottom-4 text-center text-sm text-muted-foreground w-full px-4">Note: This is a static visualization. Click a node to explore.</p>
     </div>
@@ -208,3 +199,5 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
 };
 
 export default GraphView;
+
+    
