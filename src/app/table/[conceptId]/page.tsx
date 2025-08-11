@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, LinkIcon, PlusCircle } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -75,15 +75,13 @@ const statusColors: Record<string, string> = {
 export default function TablePage() {
   const router = useRouter();
   const params = useParams();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, toggleLogin } = useAuth();
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   
   const mockData = useMemo(() => generateMockData(conceptId), [conceptId]);
 
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-
 
   const handleNewSearch = () => {
     router.push('/');
@@ -93,13 +91,17 @@ export default function TablePage() {
     const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
     router.push(`/table/${formattedTerm}`);
   };
-  
-  const toggleRow = (id: string) => {
-    setExpandedRow(expandedRow === id ? null : id);
-  };
 
+  const handleProposeLinkClick = () => {
+    if (isLoggedIn) {
+      setIsLinkModalOpen(true);
+    } else {
+      toggleLogin();
+    }
+  };
+  
   const ProposeLinkButton = () => (
-    <Button variant="outline" onClick={() => setIsLinkModalOpen(true)} disabled={!isLoggedIn}>
+    <Button variant="outline" onClick={handleProposeLinkClick}>
       <PlusCircle className="mr-2 h-4 w-4" />
       Propose Link
     </Button>
@@ -109,76 +111,69 @@ export default function TablePage() {
     <div>
       <h2 className="text-2xl font-semibold mb-4">{title}</h2>
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Concept</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Votes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <CardContent className="p-0">
+          <div className="space-y-4">
             {data.map((item) => (
-              <Fragment key={item.id}>
-                <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRow(item.id)}>
-                  <TableCell className="font-medium hover:underline" onClick={(e) => { e.stopPropagation(); handleConceptClick(item.title); }}>{item.title}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={statusColors[item.status]}>
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="flex items-center gap-4">
-                     <div className="flex items-center gap-1 text-green-500">
-                        <ArrowUp size={16} />
-                        <span>{item.upvotes}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-red-500">
-                        <ArrowDown size={16} />
-                        <span>{item.downvotes}</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                {expandedRow === item.id && (
-                  <TableRow>
-                    <TableCell colSpan={3}>
-                      <div className="p-4 bg-muted/50 rounded-lg">
-                        <p className="text-muted-foreground mb-4">{item.description}</p>
-                        <a 
-                          href={item.sourceURL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary inline-flex items-center gap-2 text-sm hover:underline"
-                        >
-                          <LinkIcon size={14} />
-                          Source
-                        </a>
+              <div key={item.id} className="p-4 border-b last:border-b-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                  <div className="md:col-span-1">
+                    <h4 
+                      className="font-medium hover:underline cursor-pointer"
+                      onClick={() => handleConceptClick(item.title)}
+                    >
+                      {item.title}
+                    </h4>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-muted-foreground mb-2 text-sm">{item.description}</p>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <Badge variant="outline" className={statusColors[item.status]}>
+                          {item.status}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-green-500">
+                          <ArrowUp size={16} />
+                          <span>{item.upvotes}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-red-500">
+                          <ArrowDown size={16} />
+                          <span>{item.downvotes}</span>
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </Fragment>
+                      <a 
+                        href={item.sourceURL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary inline-flex items-center gap-2 text-sm hover:underline"
+                      >
+                        <LinkIcon size={14} />
+                        Source
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
 
   return (
     <>
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-3xl font-semibold capitalize tracking-tight">
-          Exploring: <span className="text-primary">{conceptName}</span>
-        </h1>
-        <div className="flex items-center gap-2">
+      <div className="container mx-auto max-w-7xl px-4 py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-3xl font-semibold capitalize tracking-tight">
+            Exploring: <span className="text-primary">{conceptName}</span>
+          </h1>
+          <div className="flex items-center gap-2">
             {!isLoggedIn ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                     {/* The div wrapper is necessary for the tooltip to work on a disabled button */}
-                    <div className="cursor-not-allowed">
-                       <ProposeLinkButton />
+                    <div className="cursor-pointer" onClick={handleProposeLinkClick}>
+                      <ProposeLinkButton />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -187,22 +182,26 @@ export default function TablePage() {
                 </Tooltip>
               </TooltipProvider>
             ) : (
-               <ProposeLinkButton />
+              <ProposeLinkButton />
             )}
-          <Link href={`/graph/${conceptId}`}>
-            <Button variant="outline">Graph View</Button>
-          </Link>
-          <Button variant="secondary" onClick={handleNewSearch}>
-            New Search
-          </Button>
+            <Link href={`/graph/${conceptId}`}>
+              <Button variant="outline">Graph View</Button>
+            </Link>
+            <Button variant="secondary" onClick={handleNewSearch}>
+              New Search
+            </Button>
+          </div>
+        </div>
+        <div className="mt-8 grid grid-cols-1 gap-8">
+          {renderTable('Causes', mockData.causes)}
+          {renderTable('Effects', mockData.effects)}
         </div>
       </div>
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        {renderTable('Causes', mockData.causes)}
-        {renderTable('Effects', mockData.effects)}
-      </div>
-    </div>
-    <AddCausalLinkModal isOpen={isLinkModalOpen} onOpenChange={setIsLinkModalOpen} baseConceptName={conceptName} />
+      <AddCausalLinkModal
+        isOpen={isLinkModalOpen}
+        onOpenChange={setIsLinkModalOpen}
+        baseConceptName={conceptName}
+      />
     </>
   );
 }
