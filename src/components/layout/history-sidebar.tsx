@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 // Mock data for search history
 const mockHistory = [
@@ -18,9 +19,10 @@ const mockHistory = [
 ];
 
 export default function HistorySidebar() {
+  const router = useRouter();
+
   const handleNewSearch = () => {
-    // In a real app, this would clear the search input and start a new session
-    console.log('New search started');
+    router.push('/');
   };
 
   const formatNameToUrl = (name: string) => {
@@ -28,8 +30,8 @@ export default function HistorySidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-64 border-r border-border/40 bg-background/95 p-4">
-      <div className="flex items-center justify-between mb-4">
+    <aside className="flex flex-col h-full bg-background p-4 border-r">
+      <div className="flex items-center justify-between mb-4 pt-12 md:pt-0">
         <h2 className="text-lg font-semibold tracking-tight">History</h2>
         <Button variant="ghost" size="icon" onClick={handleNewSearch}>
           <Plus />
