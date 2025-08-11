@@ -1,27 +1,38 @@
 
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ArrowDown, ArrowUp, Info } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  forceSimulation,
+  forceLink,
+  forceManyBody,
+  forceX,
+  forceY,
+  forceCenter,
+  type Simulation,
+  type SimulationNodeDatum,
+  type SimulationLinkDatum,
+} from 'd3-force';
+import { ArrowDown, ArrowUp, Info } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from '@/lib/utils';
 
 
+// Data types
 type NodeData = {
   id: string;
   title: string;
+  type: 'cause' | 'effect' | 'central';
 };
 
 type EdgeData = {
-  id:string;
+  id: string;
   source: string;
   target: string;
   status: 'verified' | 'pending' | 'disputed' | 'rejected';
@@ -29,106 +40,174 @@ type EdgeData = {
   downvotes: number;
 };
 
+// D3 Simulation types
+interface D3Node extends NodeData, SimulationNodeDatum {
+  id: string;
+}
+
+interface D3Link extends SimulationLinkDatum<D3Node> {
+  id: string;
+  status: EdgeData['status'];
+  upvotes: number;
+  downvotes: number;
+}
+
+
+// Mock Data Generation
 const generateMockData = (centralConceptId: string) => {
-  const conceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
+    const conceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
+    const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
+    const seed = hashCode(conceptName);
 
-  const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
-  const seed = hashCode(conceptName);
+    const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
+    const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
+    
+    const causes: NodeData[] = Array.from({ length: 3 }, (_, i) => ({ id: `c${i}`, title: `${causePrefixes[(seed + i * 3) % causePrefixes.length]} ${conceptName}`, type: 'cause' }));
+    const effects: NodeData[] = Array.from({ length: 4 }, (_, i) => ({ id: `e${i}`, title: `${effectPrefixes[(seed + i * 5) % effectPrefixes.length]} ${conceptName}`, type: 'effect' }));
+    const centralNode: NodeData = { id: 'central', title: conceptName, type: 'central' };
 
-  const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
-  const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
+    const nodes = [centralNode, ...causes, ...effects];
+    
+    const statuses: EdgeData['status'][] = ['verified', 'pending', 'disputed', 'rejected'];
+    const causeEdges: EdgeData[] = causes.map((c, i) => ({ id: `ce${i}`, source: c.id, target: 'central', status: statuses[(seed + i) % statuses.length], upvotes: Math.abs(hashCode(c.title)) % 200, downvotes: Math.abs(hashCode(c.title)) % 50 }));
+    const effectEdges: EdgeData[] = effects.map((e, i) => ({ id: `ee${i}`, source: 'central', target: e.id, status: statuses[(seed + i + 1) % statuses.length], upvotes: Math.abs(hashCode(e.title)) % 250, downvotes: Math.abs(hashCode(e.title)) % 40 }));
+    
+    const edges = [...causeEdges, ...effectEdges];
 
-  const causes: NodeData[] = Array.from({ length: 3 }, (_, i) => {
-    const prefix = causePrefixes[(seed + i * 3) % causePrefixes.length];
-    return { id: `c${i}`, title: `${prefix} ${conceptName}` };
-  });
-
-  const effects: NodeData[] = Array.from({ length: 3 }, (_, i) => {
-    const prefix = effectPrefixes[(seed + i * 5) % effectPrefixes.length];
-    return { id: `e${i}`, title: `${prefix} ${conceptName}` };
-  });
-  
-  const statuses: EdgeData['status'][] = ['verified', 'pending', 'disputed', 'rejected'];
-
-  return {
-    centralNode: { id: 'central', title: conceptName },
-    causes,
-    effects,
-    causeEdges: causes.map((c, i) => ({
-      id: `ce${i}`,
-      source: c.id,
-      target: 'central',
-      status: statuses[(seed + i) % statuses.length],
-      upvotes: Math.abs(hashCode(c.title)) % 200,
-      downvotes: Math.abs(hashCode(c.title)) % 50,
-    })),
-    effectEdges: effects.map((e, i) => ({
-      id: `ee${i}`,
-      source: 'central',
-      target: e.id,
-      status: statuses[(seed + i + 1) % statuses.length],
-      upvotes: Math.abs(hashCode(e.title)) % 250,
-      downvotes: Math.abs(hashCode(e.title)) % 40,
-    })),
-  };
+    return { nodes, edges };
 };
 
-
+// Styling
 const statusColors: Record<EdgeData['status'], string> = {
-  verified: 'border-green-500 text-green-500',
-  pending: 'border-yellow-500 text-yellow-500',
-  disputed: 'border-orange-500 text-orange-500',
-  rejected: 'border-red-500 text-red-500',
+  verified: 'stroke-green-500',
+  pending: 'stroke-yellow-500',
+  disputed: 'stroke-orange-500',
+  rejected: 'stroke-red-500',
 };
 
-const Node = ({ title, isCentral = false, onClick }: { title: string; isCentral?: boolean; onClick?: () => void }) => (
-    <div 
-        className={cn("flex items-center justify-center cursor-pointer group z-10", isCentral && 'transform scale-125')}
-        onClick={onClick}
-    >
-        <div className={cn(
-            "rounded-lg p-4 shadow-lg transition-all group-hover:shadow-xl group-hover:-translate-y-1 border-2 text-center",
-            isCentral 
-              ? "bg-primary text-primary-foreground border-blue-400 min-w-[200px] min-h-[100px] flex items-center justify-center text-lg font-bold" 
-              : "bg-card border-border w-48 h-24 flex items-center justify-center"
-        )}>
-           <span className="font-semibold">{title}</span>
+// Components
+const Node = ({ node, onClick }: { node: D3Node; onClick: (title: string) => void }) => {
+    const isCentral = node.type === 'central';
+    return (
+        <foreignObject
+            x={node.x! - (isCentral ? 100 : 90)}
+            y={node.y! - (isCentral ? 40 : 35)}
+            width={isCentral ? 200 : 180}
+            height={isCentral ? 80 : 70}
+            className="cursor-pointer group overflow-visible"
+            onClick={() => onClick(node.title)}
+        >
+            <div className={cn(
+                "w-full h-full rounded-lg p-2 shadow-lg transition-all group-hover:shadow-xl group-hover:-translate-y-0.5 border-2 text-center flex items-center justify-center",
+                isCentral 
+                  ? "bg-primary text-primary-foreground border-blue-400 text-base font-bold" 
+                  : "bg-card border-border text-sm"
+            )}>
+               <span className="font-semibold">{node.title}</span>
+            </div>
+        </foreignObject>
+    );
+};
+
+const Edge = ({ link }: { link: D3Link }) => {
+    const source = link.source as D3Node;
+    const target = link.target as D3Node;
+
+    const pathData = `M${source.x},${source.y} C${source.x},${(source.y! + target.y!) / 2} ${target.x},${(source.y! + target.y!) / 2} ${target.x},${target.y}`;
+
+    return (
+        <path
+            d={pathData}
+            className={cn("stroke-2 fill-none", statusColors[link.status])}
+            markerEnd="url(#arrow)"
+        />
+    );
+};
+
+const EdgeBadge = ({ link }: { link: D3Link }) => {
+    const source = link.source as D3Node;
+    const target = link.target as D3Node;
+
+    return (
+      <foreignObject 
+        x={(source.x! + target.x!) / 2 - 75} 
+        y={(source.y! + target.y!) / 2 - 20} 
+        width="150" 
+        height="40"
+        className="overflow-visible"
+      >
+        <div className="bg-background/80 backdrop-blur-sm p-2 rounded-lg border min-w-[150px] z-20 shadow-lg">
+          <div className="flex justify-center items-center gap-4 text-sm">
+            <div className="flex items-center gap-1 text-green-500">
+              <ArrowUp size={16} />
+              <span>{link.upvotes}</span>
+            </div>
+            <div className="flex items-center gap-1 text-red-500">
+              <ArrowDown size={16} />
+              <span>{link.downvotes}</span>
+            </div>
+             <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <button className="cursor-pointer text-muted-foreground hover:text-foreground">
+                        <Info size={16} />
+                    </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                    <p className="capitalize">Status: <span className={cn(statusColors[link.status]?.replace('stroke-', 'text-'), 'font-semibold')}>{link.status}</span></p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-    </div>
-);
-
-const EdgeBadge = ({ status, upvotes, downvotes }: Omit<EdgeData, 'id' | 'source' | 'target'>) => (
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background p-2 rounded-lg border min-w-[150px] z-20 shadow-lg">
-    <div className="flex justify-center items-center gap-4 text-sm">
-      <div className="flex items-center gap-1 text-green-500">
-        <ArrowUp size={16} />
-        <span>{upvotes}</span>
-      </div>
-      <div className="flex items-center gap-1 text-red-500">
-        <ArrowDown size={16} />
-        <span>{downvotes}</span>
-      </div>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button className="cursor-pointer text-muted-foreground hover:text-foreground">
-              <Info size={16} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="capitalize">Status: <span className={cn(statusColors[status], 'font-semibold')}>{status}</span></p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
-  </div>
-);
+      </foreignObject>
+    )
+};
 
 
+// Main Graph Component
 const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   const router = useRouter();
+  const svgRef = useRef<SVGSVGElement>(null);
+  
+  const { nodes: initialNodes, edges: initialEdges } = useMemo(() => generateMockData(centralConceptId), [centralConceptId]);
 
-  const mockData = useMemo(() => generateMockData(centralConceptId), [centralConceptId]);
+  const [nodes, setNodes] = useState<D3Node[]>([]);
+  const [links, setLinks] = useState<D3Link[]>([]);
+
+
+  useEffect(() => {
+    if (!svgRef.current) return;
+    
+    const width = svgRef.current.clientWidth;
+    const height = svgRef.current.clientHeight;
+
+    const simulationNodes: D3Node[] = initialNodes.map(node => ({...node}));
+    const simulationLinks: D3Link[] = initialEdges.map(edge => ({...edge, source: edge.source, target: edge.target}));
+    
+    simulationNodes.find(n => n.type === 'central')!.fx = width / 2;
+    simulationNodes.find(n => n.type === 'central')!.fy = height / 2;
+    
+    const simulation: Simulation<D3Node, D3Link> = forceSimulation(simulationNodes)
+        .force('link', forceLink<D3Node, D3Link>(simulationLinks).id(d => d.id).distance(180))
+        .force('charge', forceManyBody().strength(-800))
+        .force('x', forceX<D3Node>(d => {
+            if (d.type === 'central') return width / 2;
+            return d.type === 'cause' ? width / 4 : (width * 3) / 4;
+        }).strength(1))
+        .force('y', forceY(height / 2).strength(0.1))
+        .force('center', forceCenter(width / 2, height / 2));
+
+    simulation.on('tick', () => {
+        setNodes([...simulation.nodes()]);
+        setLinks([...simulation.force<any>('link').links()]);
+    });
+    
+    return () => {
+        simulation.stop();
+    };
+
+  }, [initialNodes, initialEdges]);
 
   const handleNodeClick = (title: string) => {
     const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
@@ -136,68 +215,31 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   };
   
   return (
-    <div className="w-full min-h-[70vh] flex items-center justify-center p-4 rounded-lg bg-[radial-gradient(hsl(var(--muted-foreground)/0.1)_1px,transparent_1px)] [background-size:16px_16px] border relative overflow-hidden">
-        <div className="flex flex-col md:flex-row items-center justify-around w-full max-w-7xl gap-8 md:gap-16 px-4">
-            
-            {/* Causes Column */}
-            <div className="flex flex-row md:flex-col gap-8 md:gap-24">
-                {mockData.causes.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
-            </div>
-
-            {/* Central Node */}
-            <div className="flex flex-col gap-4 items-center order-first md:order-none my-8 md:my-0">
-                 <Node title={mockData.centralNode.title} isCentral />
-            </div>
-
-            {/* Effects Column */}
-            <div className="flex flex-row md:flex-col gap-8 md:gap-24">
-                {mockData.effects.map(node => <Node key={node.id} title={node.title} onClick={() => handleNodeClick(node.title)} />)}
-            </div>
-
-            {/* SVG Edges Layer */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                <svg width="100%" height="100%">
-                     <defs>
-                        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--border))" />
-                        </marker>
-                    </defs>
-                    
-                    {/* Desktop Edges */}
-                    <g className="hidden md:block">
-                        {/* Cause Edges */}
-                        <path d="M 20%,20% C 35%,20% 35%,50% 45%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 20%,50% C 35%,50% 35%,50% 45%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 20%,80% C 35%,80% 35%,50% 45%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        
-                        {/* Effect Edges */}
-                        <path d="M 55%,50% C 65%,50% 65%,20% 80%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 55%,50% C 65%,50% 65%,50% 80%,50%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 55%,50% C 65%,50% 65%,80% 80%,80%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                    </g>
-                    
-                     {/* Mobile Edges */}
-                    <g className="md:hidden">
-                        {/* Cause Edges */}
-                        <path d="M 25%,80% C 25%,65% 50%,65% 50%,55%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 50%,80% C 50%,65% 50%,65% 50%,55%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 75%,80% C 75%,65% 50%,65% 50%,55%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-
-                        {/* Effect Edges */}
-                        <path d="M 50%,45% C 50%,35% 25%,35% 25%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 50%,45% C 50%,35% 50%,35% 50%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                        <path d="M 50%,45% C 50%,35% 75%,35% 75%,20%" stroke="hsl(var(--border))" fill="none" strokeWidth="2" markerEnd="url(#arrow)"/>
-                    </g>
-                </svg>
-            </div>
-             <div className="absolute top-[calc(50%-1.5rem)] left-[calc(35%)] pointer-events-auto hidden md:block"><EdgeBadge {...mockData.causeEdges[1]}/></div>
-             <div className="absolute top-[calc(50%-1.5rem)] right-[calc(35%)] pointer-events-auto hidden md:block"><EdgeBadge {...mockData.effectEdges[1]}/></div>
-        </div>
-         <p className="absolute bottom-4 text-center text-sm text-muted-foreground w-full px-4">Note: This is a static visualization. Click a node to explore.</p>
+    <div className="w-full min-h-[70vh] rounded-lg bg-[radial-gradient(hsl(var(--muted-foreground)/0.1)_1px,transparent_1px)] [background-size:24px_24px] border relative overflow-hidden">
+        <svg ref={svgRef} width="100%" height="100%" className="min-h-[70vh]">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="15" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" className="fill-border" />
+                </marker>
+            </defs>
+            <g>
+                {links.map((link) => (
+                    <Edge key={link.id} link={link} />
+                ))}
+            </g>
+             <g>
+                {links.map((link) => (
+                    <EdgeBadge key={`badge-${link.id}`} link={link} />
+                ))}
+            </g>
+            <g>
+                {nodes.map((node) => (
+                    <Node key={node.id} node={node} onClick={handleNodeClick} />
+                ))}
+            </g>
+        </svg>
     </div>
   );
 };
 
 export default GraphView;
-
-    
