@@ -26,8 +26,6 @@ export default function Header() {
 
   const navLinks = [
     { href: '/contribute', label: 'Contribute' },
-    { href: '/graph/climate-change', label: 'Graph' },
-    { href: '/table/climate-change', label: 'Table' },
   ];
 
   return (
