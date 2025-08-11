@@ -13,31 +13,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
-
-
-const navLinks = [
-  { href: '/', label: 'Explore' },
-  { href: '/contribute', label: 'Contribute' },
-  { href: '/gopro', label: 'Go Pro' },
-];
+import { Menu } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 export default function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Mock auth state
-  
-  // This function is for demonstrating the logged-in state without a full auth system.
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const toggleLogin = () => setIsLoggedIn(!isLoggedIn);
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <div className="flex items-center gap-6">
+      <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <span className="text-xl font-bold">Xyvea</span>
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -59,7 +56,7 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/profile">Profile</Link>
                 </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild>
                   <Link href="/contribute">Contribute</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -70,14 +67,35 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={toggleLogin} className="hover:bg-white/10">
-                Log in
-              </Button>
-              <Button onClick={toggleLogin} className="rounded-lg bg-white text-black hover:bg-gray-200">
-                Sign up for free
-              </Button>
-            </div>
+            <>
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" onClick={toggleLogin} className="hover:bg-white/10">
+                  Log in
+                </Button>
+                <Button onClick={toggleLogin} className="rounded-lg bg-white text-black hover:bg-gray-200">
+                  Sign up
+                </Button>
+              </div>
+              <div className="md:hidden">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right">
+                    <div className="flex flex-col gap-4 pt-8">
+                      <Button variant="outline" onClick={() => { toggleLogin(); }}>
+                        Log in
+                      </Button>
+                      <Button onClick={() => { toggleLogin(); }}>
+                        Sign up
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+            </>
           )}
         </div>
       </div>
