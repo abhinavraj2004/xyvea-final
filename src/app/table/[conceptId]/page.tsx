@@ -144,7 +144,7 @@ export default function TablePage() {
         {renderTable('Effects', mockData.effects)}
       </div>
     </div>
-    <AddCausalLinkModal isOpen={isLinkModalOpen} onOpenChange={setIsLinkModalOpen} />
+    <AddCausalLinkModal isOpen={isLinkModalOpen} onOpenChange={setIsLinkModalOpen} baseConceptName={conceptName} />
     </>
   );
 }

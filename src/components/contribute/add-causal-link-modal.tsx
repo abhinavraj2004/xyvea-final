@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,13 +24,17 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Wand2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
-  cause: z.string().min(2, { message: 'Cause must be at least 2 characters.' }),
-  effect: z.string().min(2, { message: 'Effect must be at least 2 characters.' }),
+  relationship: z.enum(['cause', 'effect'], {
+    required_error: 'You need to select a relationship type.',
+  }),
+  relatedConceptName: z.string().min(2, { message: 'Concept name must be at least 2 characters.' }),
   description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
   sourceURL: z.string().url({ message: 'Please enter a valid URL.' }),
 });
@@ -38,6 +42,7 @@ const formSchema = z.object({
 type AddCausalLinkModalProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  baseConceptName?: string;
 };
 
 type VerificationResult = {
@@ -46,7 +51,7 @@ type VerificationResult = {
   error?: string;
 };
 
-export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLinkModalProps) {
+export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptName }: AddCausalLinkModalProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const { toast } = useToast();
@@ -54,22 +59,31 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      cause: '',
-      effect: '',
+      relatedConceptName: '',
       description: '',
       sourceURL: '',
     },
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      form.reset();
+      setVerificationResult(null);
+    }
+  }, [isOpen, form]);
+
   const handleVerify = async () => {
-    const { sourceURL, cause, effect } = form.getValues();
-    if (!sourceURL || !cause || !effect) {
-      form.trigger(['sourceURL', 'cause', 'effect']);
+    const { sourceURL, relatedConceptName, relationship } = form.getValues();
+    if (!sourceURL || !relatedConceptName || !relationship || !baseConceptName) {
+      form.trigger(['sourceURL', 'relatedConceptName', 'relationship']);
       return;
     }
     
     setIsVerifying(true);
     setVerificationResult(null);
+
+    const cause = relationship === 'cause' ? relatedConceptName : baseConceptName;
+    const effect = relationship === 'effect' ? relatedConceptName : baseConceptName;
 
     const result = await verifySourceAction({ sourceURL, cause, effect });
     setVerificationResult(result);
@@ -77,15 +91,24 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real application, this would call an API to save the new causal link.
-    console.log(values);
+    if (!baseConceptName) return;
+
+    const cause = values.relationship === 'cause' ? values.relatedConceptName : baseConceptName;
+    const effect = values.relationship === 'effect' ? values.relatedConceptName : baseConceptName;
+
+    const submissionData = {
+      cause,
+      effect,
+      description: values.description,
+      sourceURL: values.sourceURL,
+    };
+    
+    console.log(submissionData);
     toast({
       title: 'Contribution Submitted',
       description: 'Your causal link has been submitted for review. Thank you!',
     });
     onOpenChange(false);
-    form.reset();
-    setVerificationResult(null);
   }
 
   return (
@@ -94,39 +117,59 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
         <DialogHeader>
           <DialogTitle>Propose a Causal Link</DialogTitle>
           <DialogDescription>
-            Connect two concepts with a sourced cause-and-effect relationship.
+            {baseConceptName 
+              ? `Proposing a link for: "${baseConceptName}"`
+              : 'Connect two concepts with a sourced cause-and-effect relationship.'
+            }
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="cause"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cause Concept</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Increased CO2 Emissions" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="effect"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Effect Concept</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Global Warming" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="relationship"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>The related concept is a...</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex items-center space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="cause" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Cause</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="effect" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Effect</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="relatedConceptName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Related Concept Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Global Warming" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <FormField
               control={form.control}
               name="description"
@@ -148,6 +191,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
                   <FormLabel>Source URL</FormLabel>
                   <FormControl>
                     <Input placeholder="https://example.com/article" {...field} />
+
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,7 +199,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
             />
             
             <div>
-              <Button type="button" variant="secondary" onClick={handleVerify} disabled={isVerifying}>
+              <Button type="button" variant="secondary" onClick={handleVerify} disabled={isVerifying || !baseConceptName}>
                 {isVerifying ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -168,11 +212,11 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
             {isVerifying && <p className="text-sm text-muted-foreground flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Analyzing source...</p>}
 
             {verificationResult && (
-              <Alert variant={verificationResult.error ? 'destructive' : 'destructive'}>
-                {verificationResult.error ? (
+              <Alert variant={verificationResult.error ? 'destructive' : verificationResult.confidence > 5 ? 'default' : 'destructive'} className={cn(verificationResult.confidence > 5 && !verificationResult.error && "border-green-500/50 text-foreground")}>
+                 {verificationResult.error ? (
                   <XCircle className="h-4 w-4" />
                 ) : (
-                  <CheckCircle className="h-4 w-4" />
+                  <CheckCircle className={cn("h-4 w-4", verificationResult.confidence > 5 ? "text-green-500" : "text-destructive")} />
                 )}
                 <AlertTitle>
                   {verificationResult.error ? 'Verification Failed' : `AI Verification Result (Confidence: ${verificationResult.confidence}/10)`}
@@ -185,7 +229,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange }: AddCausalLi
 
             <div className="flex justify-end gap-2 pt-4">
                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-               <Button type="submit">Submit Link</Button>
+               <Button type="submit" disabled={!baseConceptName}>Submit Link</Button>
             </div>
           </form>
         </Form>
