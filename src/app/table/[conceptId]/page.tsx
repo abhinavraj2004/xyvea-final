@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, LinkIcon, PlusCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -47,10 +46,61 @@ const generateMockData = (conceptId: string) => {
 };
 
 const statusStyles: Record<string, { bg: string; text: string }> = {
-  verified: { bg: 'bg-green-500/20 text-green-900 dark:text-green-300', text: 'text-green-700 dark:text-green-400' },
-  disputed: { bg: 'bg-yellow-500/20 text-yellow-900 dark:text-yellow-300', text: 'text-yellow-700 dark:text-yellow-400' },
-  pending: { bg: 'bg-gray-500/20 text-gray-900 dark:text-gray-300', text: 'text-gray-700 dark:text-gray-400' },
-  rejected: { bg: 'bg-red-500/20 text-red-900 dark:text-red-300', text: 'text-red-700 dark:text-red-400' },
+  verified: { bg: 'bg-green-200 text-green-900', text: 'text-green-900' },
+  disputed: { bg: 'bg-yellow-200 text-yellow-900', text: 'text-yellow-900' },
+  pending: { bg: 'bg-gray-300 text-gray-900', text: 'text-gray-900' },
+  rejected: { bg: 'bg-red-200 text-red-900', text: 'text-red-900' },
+};
+
+type ConceptCardProps = {
+  item: ReturnType<typeof generateMockData>['causes'][0];
+  isSelected: boolean;
+  onSelect: () => void;
+  onNavigate: (title: string) => void;
+};
+
+
+const ConceptCard = ({ item, isSelected, onSelect, onNavigate }: ConceptCardProps) => {
+  const statusStyle = statusStyles[item.status] || statusStyles.pending;
+  return (
+    <div
+      className={cn(
+        "border rounded-lg p-4 flex flex-col h-full cursor-pointer transition-all",
+        isSelected ? "border-primary shadow-lg scale-[1.02]" : "hover:border-primary/50 hover:shadow-md"
+      )}
+      onClick={onSelect}
+    >
+      <h3 className="text-lg font-semibold mb-2 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); onNavigate(item.title); }}>{item.title}</h3>
+      <p className="text-muted-foreground text-sm flex-grow mb-4">{item.description}</p>
+      
+      <a 
+        href={item.sourceURL}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()} // Prevent card click from firing
+        className="text-primary inline-flex items-center gap-2 text-sm hover:underline mb-4"
+      >
+        <LinkIcon size={14} />
+        Source
+      </a>
+
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/50">
+        <Badge className={cn('text-xs font-medium px-2 py-1', statusStyle.bg, statusStyle.text)}>
+          {item.status}
+        </Badge>
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1 text-green-500">
+            <ArrowUp size={16} />
+            <span>{item.upvotes}</span>
+          </div>
+          <div className="flex items-center gap-1 text-red-500">
+            <ArrowDown size={16} />
+            <span>{item.downvotes}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default function TablePage() {
@@ -63,12 +113,22 @@ export default function TablePage() {
   const mockData = useMemo(() => generateMockData(conceptId), [conceptId]);
 
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [selectedCause, setSelectedCause] = useState<string | null>(null);
+  const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
+
+  const handleCardClick = (type: 'cause' | 'effect', id: string) => {
+    if (type === 'cause') {
+      setSelectedCause(prev => (prev === id ? null : id));
+    } else {
+      setSelectedEffect(prev => (prev === id ? null : id));
+    }
+  };
 
   const handleNewSearch = () => {
     router.push('/');
   };
 
-  const handleConceptClick = (title: string) => {
+  const handleConceptNavigate = (title: string) => {
     const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
     router.push(`/table/${formattedTerm}`);
   };
@@ -81,53 +141,14 @@ export default function TablePage() {
     }
   };
   
+  const isProposeDisabled = !selectedCause || !selectedEffect;
+  
   const ProposeLinkButton = () => (
-    <Button variant="outline" onClick={handleProposeLinkClick}>
+    <Button onClick={handleProposeLinkClick} disabled={isProposeDisabled || !isLoggedIn}>
       <PlusCircle className="mr-2 h-4 w-4" />
       Propose Link
     </Button>
   );
-
-  const ConceptCard = ({ item }: { item: (typeof mockData.causes)[0] }) => {
-    const statusStyle = statusStyles[item.status] || statusStyles.pending;
-    return (
-      <div 
-        className="border rounded-lg p-4 flex flex-col h-full cursor-pointer hover:border-primary/50 hover:shadow-lg transition-all"
-        onClick={() => handleConceptClick(item.title)}
-      >
-        <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-        <p className="text-muted-foreground text-sm flex-grow mb-4">{item.description}</p>
-        
-        <a 
-          href={item.sourceURL}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()} // Prevent card click from firing
-          className="text-primary inline-flex items-center gap-2 text-sm hover:underline mb-4"
-        >
-          <LinkIcon size={14} />
-          Source
-        </a>
-
-        <div className="flex items-center justify-between mt-auto">
-          <Badge className={cn('text-xs font-medium px-2 py-1', statusStyle.bg, statusStyle.text)}>
-            {item.status}
-          </Badge>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1 text-green-500">
-              <ArrowUp size={16} />
-              <span>{item.upvotes}</span>
-            </div>
-            <div className="flex items-center gap-1 text-red-500">
-              <ArrowDown size={16} />
-              <span>{item.downvotes}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
 
   return (
     <>
@@ -142,16 +163,16 @@ export default function TablePage() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="cursor-pointer" onClick={handleProposeLinkClick}>
-                      <ProposeLinkButton />
+                       <ProposeLinkButton />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>You must be logged in to propose a link.</p>
+                     {isProposeDisabled ? <p>Select a cause and an effect to propose a link.</p> : <p>You must be logged in to propose a link.</p>}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             ) : (
-              <ProposeLinkButton />
+               <ProposeLinkButton />
             )}
             <Link href={`/graph/${conceptId}`}>
               <Button variant="outline">Graph View</Button>
@@ -164,18 +185,30 @@ export default function TablePage() {
 
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Causes</h2>
-            <div className="grid grid-cols-1 gap-4">
+            <h2 className="text-2xl font-semibold mb-4 text-center">Causes</h2>
+            <div className="grid grid-cols-1 gap-6">
               {mockData.causes.map((item) => (
-                <ConceptCard key={item.id} item={item} />
+                <ConceptCard 
+                  key={item.id} 
+                  item={item} 
+                  isSelected={selectedCause === item.id}
+                  onSelect={() => handleCardClick('cause', item.id)}
+                  onNavigate={handleConceptNavigate}
+                />
               ))}
             </div>
           </div>
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Effects</h2>
-            <div className="grid grid-cols-1 gap-4">
+            <h2 className="text-2xl font-semibold mb-4 text-center">Effects</h2>
+            <div className="grid grid-cols-1 gap-6">
               {mockData.effects.map((item) => (
-                <ConceptCard key={item.id} item={item} />
+                <ConceptCard 
+                  key={item.id} 
+                  item={item} 
+                  isSelected={selectedEffect === item.id}
+                  onSelect={() => handleCardClick('effect', item.id)}
+                  onNavigate={handleConceptNavigate}
+                />
               ))}
             </div>
           </div>
@@ -185,6 +218,7 @@ export default function TablePage() {
         isOpen={isLinkModalOpen}
         onOpenChange={setIsLinkModalOpen}
         baseConceptName={conceptName}
+        // Prefill with selected concepts if needed, for now just opening
       />
     </>
   );
