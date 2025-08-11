@@ -61,10 +61,17 @@ const generateMockData = (centralConceptId: string) => {
     const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
     const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
     
+    // Improved baseTitle logic to avoid "undefined"
+    const prefixesToRemove = ['causes of', 'effects of', 'factors leading to', 'precursors of', 'origins of', 'underlying drivers of', 'consequences of', 'results of', 'impacts of', 'outcomes of'];
+    let baseTitle = conceptName;
+    prefixesToRemove.forEach(p => {
+        baseTitle = baseTitle.replace(new RegExp(`^${p}\\s`, 'i'), '');
+    });
+
+
     const createItems = (prefixes: string[], count: number, offset: number) => {
         return Array.from({ length: count }, (_, i) => {
             const prefix = prefixes[(seed + i * offset) % prefixes.length] || "Related to";
-            const baseTitle = conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "");
             const title = `${prefix} ${baseTitle}`;
             return { title };
         });
@@ -167,7 +174,7 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
     if (!svgRef.current || !initialNodes.length) return;
     
     const width = svgRef.current.clientWidth;
-    const height = svgRef.current.clientHeight;
+    const height = svg.current.clientHeight;
 
     const simulationNodes: D3Node[] = initialNodes.map(node => ({...node, x: Math.random() * width, y: Math.random() * height}));
     const simulationLinks: D3Link[] = initialEdges.map(edge => ({...edge, source: edge.source, target: edge.target}));
