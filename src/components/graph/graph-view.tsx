@@ -228,18 +228,21 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   };
 
   const dragHandler = (sim: Simulation<D3Node, D3Link> | undefined) => {
-    function dragstarted(event: D3DragEvent<any, D3Node, any>, d: D3Node) {
+    function dragstarted(event: D3DragEvent<any, D3Node, any>) {
+      const d = event.subject;
       if (!event.active && sim) sim.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
 
-    function dragged(event: D3DragEvent<any, D3Node, any>, d: D3Node) {
+    function dragged(event: D3DragEvent<any, D3Node, any>) {
+      const d = event.subject;
       d.fx = event.x;
       d.fy = event.y;
     }
 
-    function dragended(event: D3DragEvent<any, D3Node, any>, d: D3Node) {
+    function dragended(event: D3DragEvent<any, D3Node, any>) {
+      const d = event.subject;
       if (!event.active && sim) sim.alphaTarget(0);
       d.fx = null;
       d.fy = null;
