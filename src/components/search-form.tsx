@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { Mic, Paperclip, Search } from 'lucide-react';
 
 export function SearchForm() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,16 +20,28 @@ export function SearchForm() {
 
   return (
     <form onSubmit={handleSearch} className="relative w-full">
-      <Input
-        type="search"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Ask about a concept and its connections..."
-        className="w-full rounded-lg bg-background border-border/50 shadow-lg py-6 pl-4 pr-14"
-      />
-      <Button type="submit" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md h-9 w-9">
-        <Send size={18}/>
-      </Button>
+      <div className="relative">
+        <Input
+          type="search"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Ask anything"
+          className="w-full rounded-2xl bg-background border-white/20 shadow-lg py-7 pl-28 pr-20 text-lg"
+        />
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+           <Button type="button" variant="outline" size="sm" className="rounded-full bg-transparent border-white/20 hover:bg-white/10">
+              <Paperclip size={16} />
+              Attach
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="rounded-full bg-transparent border-white/20 hover:bg-white/10">
+              <Search size={16}/>
+              Search
+            </Button>
+        </div>
+        <Button type="submit" size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-white/10 hover:bg-white/20">
+          <Mic size={20}/>
+        </Button>
+      </div>
     </form>
   );
 }

@@ -12,10 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X } from 'lucide-react';
-import { Logo } from './logo';
-import { cn } from '@/lib/utils';
-import { ThemeToggle } from '../ui/theme-toggle';
+import { ChevronDown } from 'lucide-react';
 
 
 const navLinks = [
@@ -31,16 +28,16 @@ export default function Header() {
   const toggleLogin = () => setIsLoggedIn(!isLoggedIn);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-7xl items-center justify-between">
+    <header className="sticky top-0 z-50 w-full">
+      <div className="container flex h-16 max-w-7xl items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <Logo />
+            <span className="text-xl font-semibold">Xyvea</span>
+            <ChevronDown size={16} />
           </Link>
         </div>
 
         <div className="flex items-center gap-4">
-           <ThemeToggle />
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -74,10 +71,12 @@ export default function Header() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={toggleLogin}>
-                Log In
+              <Button variant="ghost" onClick={toggleLogin} className="hover:bg-white/10">
+                Log in
               </Button>
-              <Button onClick={toggleLogin}>Sign Up</Button>
+              <Button onClick={toggleLogin} className="rounded-lg bg-white text-black hover:bg-gray-200">
+                Sign up for free
+              </Button>
             </div>
           )}
         </div>
