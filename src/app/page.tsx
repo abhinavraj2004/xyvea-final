@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { SearchForm } from '@/components/search-form';
-import { BrainCircuit, Lightbulb, MessageSquareQuote, Shuffle } from 'lucide-react';
+import { Zap, TrendingUp, Users, DollarSign, Cpu } from 'lucide-react';
 
 const suggestionChips = [
-  { label: 'Summarize text', icon: MessageSquareQuote },
-  { label: 'Surprise me', icon: Shuffle },
-  { label: 'Brainstorm', icon: BrainCircuit },
-  { label: 'Analyze data', icon: Lightbulb },
+  { label: 'Causes of Climate Change', icon: TrendingUp },
+  { label: 'Effects of Social Media', icon: Users },
+  { label: 'Factors in Economic Growth', icon: DollarSign },
+  { label: 'Impact of AI on Jobs', icon: Cpu },
 ]
 
 export default function Home() {
@@ -14,9 +14,9 @@ export default function Home() {
     <div className="flex h-full flex-col justify-end">
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight">Log in to unlock GPT-5</h1>
+            <h1 className="text-4xl font-bold tracking-tight">Explore the graph with Xyvea</h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-              ChatGPT now has our smartest, fastest, most useful model yet, with thinking built in — log in to get our best answers.
+              Xyvea helps you understand the world by mapping cause and effect. Log in to explore and contribute to the knowledge graph.
             </p>
         </div>
       </div>
@@ -30,12 +30,9 @@ export default function Home() {
                 {label}
               </Button>
             ))}
-             <Button variant="outline" className="rounded-full bg-transparent border-white/20 hover:bg-white/5">
-                More
-              </Button>
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground/50">
-            By messaging Xyvea, you agree to our Terms and have read our Privacy Policy.
+            By using Xyvea, you agree to our Terms and have read our Privacy Policy.
           </p>
         </div>
       </div>
