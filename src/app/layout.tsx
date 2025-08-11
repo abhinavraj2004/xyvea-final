@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import Header from '@/components/layout/header';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/hooks/use-auth';
+import HistorySidebar from '@/components/layout/history-sidebar';
 
 export const metadata: Metadata = {
   title: 'Xyvea',
@@ -27,7 +28,10 @@ export default function RootLayout({
         <AuthProvider>
           <div className="relative flex min-h-screen flex-col">
             <Header />
-            <main className="flex-1 flex flex-col">{children}</main>
+            <div className="flex-1 flex">
+              <HistorySidebar />
+              <main className="flex-1 flex flex-col">{children}</main>
+            </div>
           </div>
           <Toaster />
         </AuthProvider>
