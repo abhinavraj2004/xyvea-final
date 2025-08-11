@@ -13,18 +13,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
-import { Menu } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/use-auth';
-import HistorySidebar from './history-sidebar';
 
 export default function Header() {
   const { isLoggedIn, toggleLogin } = useAuth();
   const router = useRouter();
+
+  const handleContribute = () => {
+    router.push('/contribute');
+  };
 
   const handleSignIn = () => {
     router.push('/auth/signin');
@@ -34,23 +31,11 @@ export default function Header() {
     router.push('/auth/signup');
   }
 
+
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2">
-          {isLoggedIn && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu />
-                  <span className="sr-only">Toggle History</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0">
-                 <HistorySidebar />
-              </SheetContent>
-            </Sheet>
-          )}
+        <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <span className="text-xl font-bold">Xyvea</span>
@@ -58,6 +43,9 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={handleContribute}>
+                Contribute
+            </Button>
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -88,39 +76,14 @@ export default function Header() {
             </DropdownMenu>
           ) : (
             <>
-              <div className="hidden md:flex items-center gap-2">
                 <Button variant="ghost" onClick={handleSignIn}>
                    Log in
                 </Button>
                 <Button onClick={handleSignUp}>
                    Sign up
                 </Button>
-              </div>
             </>
           )}
-           <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right">
-                  <div className="flex flex-col gap-4 pt-8">
-                    {!isLoggedIn && (
-                       <div className="flex flex-col gap-2 pt-4 border-t">
-                        <Button variant="outline" asChild>
-                           <Link href="/auth/signin">Log in</Link>
-                        </Button>
-                        <Button asChild>
-                           <Link href="/auth/signup">Sign up</Link>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
         </div>
       </div>
     </header>
