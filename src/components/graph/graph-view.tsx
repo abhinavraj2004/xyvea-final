@@ -14,6 +14,7 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from 'd3-force';
+import { select, drag, zoom, type D3DragEvent, type ZoomTransform } from 'd3';
 import { ArrowDown, ArrowUp, Info } from 'lucide-react';
 import {
   Tooltip,
@@ -65,7 +66,8 @@ const generateMockData = (centralConceptId: string) => {
     const createItems = (prefixes: string[], count: number, offset: number) => {
         return Array.from({ length: count }, (_, i) => {
             const prefix = prefixes[(seed + i * offset) % prefixes.length] || "Related to";
-            const title = `${prefix} ${conceptName}`;
+            const baseTitle = conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "");
+            const title = `${prefix} ${baseTitle}`;
             return { title };
         });
     };
@@ -97,26 +99,36 @@ const statusColors: Record<EdgeData['status'], string> = {
 };
 
 // Components
-const Node = ({ node, onClick }: { node: D3Node; onClick: (title: string) => void }) => {
+const Node = ({ node, onClick, onDrag }: { node: D3Node; onClick: (title: string) => void; onDrag: any }) => {
     const isCentral = node.type === 'central';
+    const nodeRef = useRef<SVGGElement>(null);
+
+    useEffect(() => {
+        if (nodeRef.current) {
+            select(nodeRef.current).call(onDrag);
+        }
+    }, [onDrag]);
+    
     return (
-        <foreignObject
-            x={node.x! - (isCentral ? 100 : 90)}
-            y={node.y! - (isCentral ? 40 : 35)}
-            width={isCentral ? 200 : 180}
-            height={isCentral ? 80 : 70}
-            className="cursor-pointer group overflow-visible"
-            onClick={() => onClick(node.title)}
-        >
-            <div className={cn(
-                "w-full h-full rounded-lg p-2 shadow-lg transition-all group-hover:shadow-xl group-hover:-translate-y-0.5 border-2 text-center flex items-center justify-center",
-                isCentral 
-                  ? "bg-primary text-primary-foreground border-blue-400 text-base font-bold" 
-                  : "bg-card border-border text-sm"
-            )}>
-               <span className="font-semibold capitalize">{node.title}</span>
-            </div>
-        </foreignObject>
+        <g ref={nodeRef} transform={`translate(${node.x}, ${node.y})`} className="cursor-pointer group">
+            <foreignObject
+                x={-(isCentral ? 100 : 90)}
+                y={-(isCentral ? 40 : 35)}
+                width={isCentral ? 200 : 180}
+                height={isCentral ? 80 : 70}
+                className="overflow-visible"
+                onClick={() => onClick(node.title)}
+            >
+                <div className={cn(
+                    "w-full h-full rounded-lg p-2 shadow-lg transition-all group-hover:shadow-xl group-hover:-translate-y-0.5 border-2 text-center flex items-center justify-center",
+                    isCentral 
+                      ? "bg-primary text-primary-foreground border-blue-400 text-base font-bold" 
+                      : "bg-card border-border text-sm"
+                )}>
+                   <span className="font-semibold capitalize">{node.title}</span>
+                </div>
+            </foreignObject>
+        </g>
     );
 };
 
@@ -147,39 +159,43 @@ const EdgeBadge = ({ link }: { link: D3Link }) => {
       return null;
     }
 
+    const transform = `translate(${(source.x + target.x) / 2}, ${(source.y + target.y) / 2})`
+
     return (
-      <foreignObject 
-        x={(source.x! + target.x!) / 2 - 75} 
-        y={(source.y! + target.y!) / 2 - 20} 
-        width="150" 
-        height="40"
-        className="overflow-visible"
-      >
-        <div className="bg-background/80 backdrop-blur-sm p-2 rounded-lg border min-w-[150px] z-20 shadow-lg">
-          <div className="flex justify-center items-center gap-4 text-sm">
-            <div className="flex items-center gap-1 text-green-500">
-              <ArrowUp size={16} />
-              <span>{link.upvotes}</span>
+      <g transform={transform}>
+        <foreignObject 
+            x="-75"
+            y="-20"
+            width="150" 
+            height="40"
+            className="overflow-visible"
+          >
+            <div className="bg-background/80 backdrop-blur-sm p-2 rounded-lg border min-w-[150px] z-20 shadow-lg">
+              <div className="flex justify-center items-center gap-4 text-sm">
+                <div className="flex items-center gap-1 text-green-500">
+                  <ArrowUp size={16} />
+                  <span>{link.upvotes}</span>
+                </div>
+                <div className="flex items-center gap-1 text-red-500">
+                  <ArrowDown size={16} />
+                  <span>{link.downvotes}</span>
+                </div>
+                 <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                        <button className="cursor-pointer text-muted-foreground hover:text-foreground">
+                            <Info size={16} />
+                        </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                        <p className="capitalize">Status: <span className={cn(statusColors[link.status]?.replace('stroke-', 'text-'), 'font-semibold')}>{link.status}</span></p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-red-500">
-              <ArrowDown size={16} />
-              <span>{link.downvotes}</span>
-            </div>
-             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                    <button className="cursor-pointer text-muted-foreground hover:text-foreground">
-                        <Info size={16} />
-                    </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                    <p className="capitalize">Status: <span className={cn(statusColors[link.status]?.replace('stroke-', 'text-'), 'font-semibold')}>{link.status}</span></p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-      </foreignObject>
+        </foreignObject>
+      </g>
     )
 };
 
@@ -188,11 +204,14 @@ const EdgeBadge = ({ link }: { link: D3Link }) => {
 const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   const router = useRouter();
   const svgRef = useRef<SVGSVGElement>(null);
+  const gRef = useRef<SVGGElement>(null);
+  const [simulation, setSimulation] = useState<Simulation<D3Node, D3Link>>();
   
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => generateMockData(centralConceptId), [centralConceptId]);
 
   const [nodes, setNodes] = useState<D3Node[]>([]);
   const [links, setLinks] = useState<D3Link[]>([]);
+  const [currentZoom, setCurrentZoom] = useState<ZoomTransform>(zoomIdentity);
 
 
   useEffect(() => {
@@ -201,7 +220,7 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
 
-    const simulationNodes: D3Node[] = initialNodes.map(node => ({...node}));
+    const simulationNodes: D3Node[] = initialNodes.map(node => ({...node, x: Math.random() * width, y: Math.random() * height}));
     const simulationLinks: D3Link[] = initialEdges.map(edge => ({...edge, source: edge.source, target: edge.target}));
     
     const centralNode = simulationNodes.find(n => n.type === 'central');
@@ -210,39 +229,70 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
         centralNode.fy = height / 2;
     }
     
-    const simulation: Simulation<D3Node, D3Link> = forceSimulation(simulationNodes)
-        .force('link', forceLink<D3Node, D3Link>(simulationLinks).id(d => d.id).distance(180))
-        .force('charge', forceManyBody().strength(-800))
+    const sim: Simulation<D3Node, D3Link> = forceSimulation(simulationNodes)
+        .force('link', forceLink<D3Node, D3Link>(simulationLinks).id(d => d.id).distance(200).strength(0.5))
+        .force('charge', forceManyBody().strength(-1200))
         .force('x', forceX<D3Node>(d => {
             if (d.type === 'central') return width / 2;
-            const isMobile = width < 768; // md breakpoint
-            if (isMobile) return width / 2; // Stack vertically on mobile
-            return d.type === 'cause' ? width / 4 : (width * 3) / 4;
-        }).strength(1))
-        .force('y', forceY<D3Node>(d => {
             const isMobile = width < 768;
-            if (isMobile) {
-                if (d.type === 'central') return height / 2;
-                return d.type === 'cause' ? height / 4 : (height * 3) / 4;
-            }
-            return height / 2;
-        }).strength(isMobile => isMobile ? 0.5 : 0.1))
+            if (isMobile) return width / 2;
+            return d.type === 'cause' ? width / 4 : (width * 3) / 4;
+        }).strength(0.8))
+        .force('y', forceY<D3Node>(height / 2).strength(0.1))
         .force('center', forceCenter(width / 2, height / 2));
 
-    simulation.on('tick', () => {
-        setNodes([...simulation.nodes()]);
-        setLinks([...simulation.force<any>('link').links()]);
+    sim.on('tick', () => {
+        setNodes([...sim.nodes()]);
+        setLinks([...sim.force<any>('link').links()]);
     });
     
+    setSimulation(sim);
+
+    const svgElement = select(svgRef.current);
+    const gElement = select(gRef.current);
+
+    const zoomBehavior = zoom<SVGSVGElement, unknown>().on('zoom', (event) => {
+        gElement.attr('transform', event.transform);
+        setCurrentZoom(event.transform);
+    });
+
+    svgElement.call(zoomBehavior as any);
+
     return () => {
-        simulation.stop();
+        sim.stop();
     };
 
   }, [initialNodes, initialEdges]);
 
   const handleNodeClick = (title: string) => {
-    const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
-    router.push(`/graph/${formattedTerm}`);
+    if (currentZoom.k === 1 && currentZoom.x === 0 && currentZoom.y === 0) { // crude way to check if drag happened
+        const formattedTerm = encodeURIComponent(title.trim().toLowerCase().replace(/\s/g, '-'));
+        router.push(`/graph/${formattedTerm}`);
+    }
+  };
+
+  const dragHandler = (sim: Simulation<D3Node, D3Link> | undefined) => {
+    function dragstarted(event: D3DragEvent<any, D3Node, any>, d: D3Node) {
+      if (!event.active && sim) sim.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event: D3DragEvent<any, D3Node, any>, d: D3Node) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event: D3DragEvent<any, D3Node, any>, d: D3Node) {
+      if (!event.active && sim) sim.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    return drag<any, D3Node>()
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended);
   };
   
   return (
@@ -253,24 +303,32 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
                     <path d="M 0 0 L 10 5 L 0 10 z" className="fill-border" />
                 </marker>
             </defs>
-            <g>
+            <g ref={gRef}>
                 {links.map((link) => (
                     <Edge key={link.id} link={link} />
                 ))}
-            </g>
-             <g>
                 {links.map((link) => (
                     <EdgeBadge key={`badge-${link.id}`} link={link} />
                 ))}
-            </g>
-            <g>
                 {nodes.map((node) => (
-                    <Node key={node.id} node={node} onClick={handleNodeClick} />
+                    <Node key={node.id} node={node} onClick={handleNodeClick} onDrag={dragHandler(simulation)} />
                 ))}
             </g>
         </svg>
     </div>
   );
+};
+
+// Dummy zoomIdentity for initial state
+const zoomIdentity = {
+  k: 1,
+  x: 0,
+  y: 0,
+  apply: function(point: [number, number]): [number, number] { return point; },
+  scale: function(k: number) { return this; },
+  translate: function(x: number, y: number) { return this; },
+  invert: function(point: [number, number]): [number, number] { return point; },
+  toString: function(): string { return `translate(0,0) scale(1)`; }
 };
 
 export default GraphView;
