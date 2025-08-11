@@ -174,7 +174,7 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
     if (!svgRef.current || !initialNodes.length) return;
     
     const width = svgRef.current.clientWidth;
-    const height = svg.current.clientHeight;
+    const height = svgRef.current.clientHeight;
 
     const simulationNodes: D3Node[] = initialNodes.map(node => ({...node, x: Math.random() * width, y: Math.random() * height}));
     const simulationLinks: D3Link[] = initialEdges.map(edge => ({...edge, source: edge.source, target: edge.target}));
