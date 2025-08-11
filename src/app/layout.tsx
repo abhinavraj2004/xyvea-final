@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import Header from '@/components/layout/header';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/hooks/use-auth';
+import AppLayout from '@/components/layout/app-layout';
+
 
 export const metadata: Metadata = {
   title: 'Xyvea',
@@ -25,10 +26,9 @@ export default function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background antialiased dark')}>
         <AuthProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1 flex flex-col">{children}</main>
-          </div>
+          <AppLayout>
+            {children}
+          </AppLayout>
           <Toaster />
         </AuthProvider>
       </body>

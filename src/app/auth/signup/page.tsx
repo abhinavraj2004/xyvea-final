@@ -1,9 +1,12 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { Logo } from '@/components/layout/logo';
+import { useAuth } from '@/hooks/use-auth';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -12,6 +15,14 @@ const GoogleIcon = () => (
 );
 
 export default function SignUpPage() {
+  const { setLoggedIn } = useAuth();
+
+  const handleSignUp = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // In a real app, you would perform registration and authentication here
+    setLoggedIn();
+  };
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
       <Card className="w-full max-w-sm">
@@ -23,7 +34,7 @@ export default function SignUpPage() {
           <CardDescription>Join Xyvea to start mapping knowledge.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" className="w-full" onClick={handleSignUp}>
             <GoogleIcon />
             Sign up with Google
           </Button>
@@ -49,7 +60,7 @@ export default function SignUpPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full">Create Account</Button>
+          <Button className="w-full" onClick={handleSignUp}>Create Account</Button>
           <div className="text-center text-sm">
             Already have an account?{' '}
             <Link href="/auth/signin" className="underline text-primary">

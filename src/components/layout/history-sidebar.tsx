@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus } from 'lucide-react';
+import { Plus, PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 // Mock data for search history
@@ -25,13 +25,23 @@ export default function HistorySidebar() {
     router.push('/');
   };
 
+  const handleContributeClick = () => {
+    router.push('/contribute');
+  };
+
   const formatNameToUrl = (name: string) => {
     return encodeURIComponent(name.trim().toLowerCase().replace(/\s/g, '-'));
   };
 
   return (
     <aside className="flex flex-col h-full bg-background p-4 border-r">
-      <div className="flex items-center justify-between mb-4 pt-12 md:pt-0">
+       <div className="flex flex-col gap-4 mb-4 pt-12 md:pt-0">
+          <Button onClick={handleContributeClick}>
+            <PlusCircle />
+            Contribute
+          </Button>
+       </div>
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold tracking-tight">History</h2>
         <Button variant="ghost" size="icon" onClick={handleNewSearch}>
           <Plus />

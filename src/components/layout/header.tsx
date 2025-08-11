@@ -26,30 +26,31 @@ export default function Header() {
   const { isLoggedIn, toggleLogin } = useAuth();
   const router = useRouter();
 
-  const handleContributeClick = () => {
-    if (!isLoggedIn) {
-      toggleLogin();
-    } else {
-      router.push('/contribute');
-    }
-  };
+  const handleSignIn = () => {
+    router.push('/auth/signin');
+  }
 
+  const handleSignUp = () => {
+    router.push('/auth/signup');
+  }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full">
       <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
-           <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu />
-                <span className="sr-only">Toggle History</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0">
-               <HistorySidebar />
-            </SheetContent>
-          </Sheet>
+          {isLoggedIn && (
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu />
+                  <span className="sr-only">Toggle History</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0">
+                 <HistorySidebar />
+              </SheetContent>
+            </Sheet>
+          )}
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <span className="text-xl font-bold">Xyvea</span>
@@ -78,9 +79,6 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/profile">Profile</Link>
                 </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                  <Link href="/contribute">Contribute</Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
@@ -91,14 +89,11 @@ export default function Header() {
           ) : (
             <>
               <div className="hidden md:flex items-center gap-2">
-                 <Button variant="outline" onClick={handleContributeClick}>
-                   Contribute
+                <Button variant="ghost" onClick={handleSignIn}>
+                   Log in
                 </Button>
-                <Button variant="ghost" asChild>
-                   <Link href="/auth/signin">Log in</Link>
-                </Button>
-                <Button asChild>
-                   <Link href="/auth/signup">Sign up</Link>
+                <Button onClick={handleSignUp}>
+                   Sign up
                 </Button>
               </div>
             </>
@@ -112,11 +107,6 @@ export default function Header() {
                 </SheetTrigger>
                 <SheetContent side="right">
                   <div className="flex flex-col gap-4 pt-8">
-                     <nav className="flex flex-col gap-4">
-                        <Button variant="link" onClick={handleContributeClick} className="text-lg font-medium text-foreground transition-colors hover:text-primary justify-start p-0">
-                          Contribute
-                        </Button>
-                    </nav>
                     {!isLoggedIn && (
                        <div className="flex flex-col gap-2 pt-4 border-t">
                         <Button variant="outline" asChild>
