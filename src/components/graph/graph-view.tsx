@@ -65,8 +65,7 @@ const generateMockData = (centralConceptId: string) => {
     const createItems = (prefixes: string[], count: number, offset: number) => {
         return Array.from({ length: count }, (_, i) => {
             const prefix = prefixes[(seed + i * offset) % prefixes.length] || "Related to";
-            const baseTitle = conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "");
-            const title = `${prefix} ${baseTitle}`;
+            const title = `${prefix} ${conceptName}`;
             return { title };
         });
     };
@@ -124,6 +123,10 @@ const Node = ({ node, onClick }: { node: D3Node; onClick: (title: string) => voi
 const Edge = ({ link }: { link: D3Link }) => {
     const source = link.source as D3Node;
     const target = link.target as D3Node;
+    
+    if (!source.x || !source.y || !target.x || !target.y) {
+      return null;
+    }
 
     const pathData = `M${source.x},${source.y} C${source.x},${(source.y! + target.y!) / 2} ${target.x},${(source.y! + target.y!) / 2} ${target.x},${target.y}`;
 
@@ -139,6 +142,10 @@ const Edge = ({ link }: { link: D3Link }) => {
 const EdgeBadge = ({ link }: { link: D3Link }) => {
     const source = link.source as D3Node;
     const target = link.target as D3Node;
+    
+    if (!source.x || !source.y || !target.x || !target.y) {
+      return null;
+    }
 
     return (
       <foreignObject 
@@ -189,7 +196,7 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
 
 
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!svgRef.current || !initialNodes.length) return;
     
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
@@ -267,3 +274,5 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
 };
 
 export default GraphView;
+
+    
