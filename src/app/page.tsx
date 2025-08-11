@@ -4,9 +4,9 @@ import { Brain, Cpu, Sparkles, TrendingUp } from 'lucide-react';
 
 const suggestionChips = [
   { label: 'Causes of Climate Change', icon: TrendingUp },
-  { label: 'Brainstorm ideas', icon: Brain },
-  { label: 'Surprise me!', icon: Sparkles },
   { label: 'Impact of AI on Jobs', icon: Cpu },
+  { label: 'Brainstorm research topics', icon: Brain },
+  { label: 'Surprise me!', icon: Sparkles },
 ]
 
 export default function Home() {
@@ -15,10 +15,10 @@ export default function Home() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center px-4">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Log in to unlock Xyvea
+            Xyvea, the Causal Engine
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
-            Xyvea now has our smartest, fastest, most useful model yet, with thinking built in — log in to get our best answers.
+            Explore the connections between ideas and understand why things happen.
           </p>
         </div>
       </div>
