@@ -16,6 +16,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, LinkIcon, PlusCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
+import { useAuth } from '@/hooks/use-auth';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const generateMockData = (conceptId: string) => {
@@ -31,7 +33,7 @@ const generateMockData = (conceptId: string) => {
 
   const causes = Array.from({ length: 3 }, (_, i) => {
     const prefix = causePrefixes[(seed + i * 3) % causePrefixes.length];
-    const title = `${prefix} ${conceptName}`;
+    const title = `${prefix} ${conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "")}`;
     const titleHash = hashCode(title);
     return {
       id: `c${i}`,
@@ -46,7 +48,7 @@ const generateMockData = (conceptId: string) => {
 
   const effects = Array.from({ length: 3 }, (_, i) => {
     const prefix = effectPrefixes[(seed + i * 5) % effectPrefixes.length];
-    const title = `${prefix} ${conceptName}`;
+    const title = `${prefix} ${conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "")}`;
     const titleHash = hashCode(title);
     return {
       id: `e${i}`,
@@ -73,6 +75,7 @@ const statusColors: Record<string, string> = {
 export default function TablePage() {
   const router = useRouter();
   const params = useParams();
+  const { isLoggedIn } = useAuth();
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   
@@ -94,6 +97,13 @@ export default function TablePage() {
   const toggleRow = (id: string) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
+
+  const ProposeLinkButton = () => (
+    <Button variant="outline" onClick={() => setIsLinkModalOpen(true)} disabled={!isLoggedIn}>
+      <PlusCircle className="mr-2 h-4 w-4" />
+      Propose Link
+    </Button>
+  );
 
   const renderTable = (title: string, data: typeof mockData.causes) => (
     <div>
@@ -162,10 +172,23 @@ export default function TablePage() {
           Exploring: <span className="text-primary">{conceptName}</span>
         </h1>
         <div className="flex items-center gap-2">
-           <Button variant="outline" onClick={() => setIsLinkModalOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Propose Link
-          </Button>
+            {!isLoggedIn ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                     {/* The div wrapper is necessary for the tooltip to work on a disabled button */}
+                    <div className="cursor-not-allowed">
+                       <ProposeLinkButton />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>You must be logged in to propose a link.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+               <ProposeLinkButton />
+            )}
           <Link href={`/graph/${conceptId}`}>
             <Button variant="outline">Graph View</Button>
           </Link>

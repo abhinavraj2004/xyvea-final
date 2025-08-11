@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,14 +19,20 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const toggleLogin = () => setIsLoggedIn(!isLoggedIn);
+  const { isLoggedIn, toggleLogin } = useAuth();
+  const router = useRouter();
 
-  const navLinks = [
-    { href: '/contribute', label: 'Contribute' },
-  ];
+  const handleContributeClick = () => {
+    if (isLoggedIn) {
+      router.push('/contribute');
+    } else {
+      toggleLogin(); // This will show the login/signup page
+    }
+  };
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -73,14 +79,14 @@ export default function Header() {
           ) : (
             <>
               <div className="hidden md:flex items-center gap-2">
-                 <Button variant="outline" asChild>
-                   <Link href="/contribute">Contribute</Link>
+                 <Button variant="outline" onClick={handleContributeClick}>
+                   Contribute
                 </Button>
-                <Button variant="ghost" onClick={toggleLogin}>
-                  Log in
+                <Button variant="ghost" asChild>
+                   <Link href="/auth/signin">Log in</Link>
                 </Button>
-                <Button onClick={toggleLogin}>
-                  Sign up
+                <Button asChild>
+                   <Link href="/auth/signup">Sign up</Link>
                 </Button>
               </div>
             </>
@@ -95,23 +101,17 @@ export default function Header() {
                 <SheetContent side="right">
                   <div className="flex flex-col gap-4 pt-8">
                      <nav className="flex flex-col gap-4">
-                      {isLoggedIn ? (
-                         <Link href="/contribute" className="text-lg font-medium text-foreground transition-colors hover:text-primary">
+                        <Link href="/contribute" onClick={handleContributeClick} className="text-lg font-medium text-foreground transition-colors hover:text-primary">
                           Contribute
                         </Link>
-                      ) : (
-                        <Link href="/contribute" className="text-lg font-medium text-foreground transition-colors hover:text-primary">
-                          Contribute
-                        </Link>
-                      )}
                     </nav>
                     {!isLoggedIn && (
                        <div className="flex flex-col gap-2 pt-4 border-t">
-                        <Button variant="outline" onClick={() => { toggleLogin(); }}>
-                          Log in
+                        <Button variant="outline" asChild>
+                           <Link href="/auth/signin">Log in</Link>
                         </Button>
-                        <Button onClick={() => { toggleLogin(); }}>
-                          Sign up
+                        <Button asChild>
+                           <Link href="/auth/signup">Sign up</Link>
                         </Button>
                       </div>
                     )}

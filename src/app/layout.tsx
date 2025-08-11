@@ -3,6 +3,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import Header from '@/components/layout/header';
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
   title: 'Xyvea',
@@ -23,11 +24,13 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('min-h-screen bg-background antialiased dark')}>
+        <AuthProvider>
           <div className="relative flex min-h-screen flex-col">
             <Header />
             <main className="flex-1 flex flex-col">{children}</main>
           </div>
           <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

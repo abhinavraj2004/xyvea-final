@@ -29,6 +29,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Wand2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   relationship: z.enum(['cause', 'effect'], {
@@ -55,6 +56,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const { toast } = useToast();
+  const { isLoggedIn } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -91,7 +93,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!baseConceptName) return;
+    if (!baseConceptName || !isLoggedIn) return;
 
     const cause = values.relationship === 'cause' ? values.relatedConceptName : baseConceptName;
     const effect = values.relationship === 'effect' ? values.relatedConceptName : baseConceptName;
@@ -199,7 +201,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
             />
             
             <div>
-              <Button type="button" variant="secondary" onClick={handleVerify} disabled={isVerifying || !baseConceptName}>
+              <Button type="button" variant="secondary" onClick={handleVerify} disabled={isVerifying || !baseConceptName || !isLoggedIn}>
                 {isVerifying ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -229,7 +231,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
 
             <div className="flex justify-end gap-2 pt-4">
                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-               <Button type="submit" disabled={!baseConceptName}>Submit Link</Button>
+               <Button type="submit" disabled={!baseConceptName || !isLoggedIn}>Submit Link</Button>
             </div>
           </form>
         </Form>

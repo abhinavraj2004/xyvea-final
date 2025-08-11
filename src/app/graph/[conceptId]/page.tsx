@@ -7,10 +7,13 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { PlusCircle } from 'lucide-react';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
+import { useAuth } from '@/hooks/use-auth';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function GraphPage() {
   const router = useRouter();
   const params = useParams();
+  const { isLoggedIn } = useAuth();
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -18,6 +21,13 @@ export default function GraphPage() {
   const handleNewSearch = () => {
     router.push('/');
   };
+
+  const ProposeLinkButton = () => (
+    <Button variant="outline" onClick={() => setIsLinkModalOpen(true)} disabled={!isLoggedIn}>
+      <PlusCircle className="mr-2 h-4 w-4" />
+      Propose Link
+    </Button>
+  );
 
   return (
     <>
@@ -27,10 +37,23 @@ export default function GraphPage() {
             Exploring: <span className="text-primary">{conceptName}</span>
           </h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setIsLinkModalOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Propose Link
-            </Button>
+            {!isLoggedIn ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {/* The div wrapper is necessary for the tooltip to work on a disabled button */}
+                    <div className="cursor-not-allowed">
+                      <ProposeLinkButton />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>You must be logged in to propose a link.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <ProposeLinkButton />
+            )}
             <Link href={`/table/${conceptId}`}>
               <Button variant="outline">Tabular View</Button>
             </Link>
