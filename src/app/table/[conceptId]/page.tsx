@@ -133,7 +133,7 @@ export default function TablePage() {
     <>
       <div className="container mx-auto max-w-7xl px-4 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-3xl font-semibold capitalize tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-semibold capitalize tracking-tight">
             Exploring: <span className="text-primary">{conceptName}</span>
           </h1>
           <div className="flex items-center gap-2">
