@@ -1,75 +1,56 @@
 'use client';
 
-import { useState, Fragment, useMemo } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, LinkIcon, PlusCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
+import { cn } from '@/lib/utils';
 
 const generateMockData = (conceptId: string) => {
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
 
-  // A simple hash function to get a number from a string, for variety
   const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
   const seed = hashCode(conceptName);
   
   const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
   const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
-  const statuses = ['verified', 'pending', 'disputed', 'rejected'];
+  const statuses = ['verified', 'pending', 'disputed', 'rejected'] as const;
 
-  const causes = Array.from({ length: 3 }, (_, i) => {
-    const prefix = causePrefixes[(seed + i * 3) % causePrefixes.length];
-    const title = `${prefix} ${conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "")}`;
-    const titleHash = hashCode(title);
-    return {
-      id: `c${i}`,
-      title,
-      status: statuses[(seed + i) % statuses.length],
-      upvotes: Math.abs(titleHash) % 200,
-      downvotes: Math.abs(titleHash) % 50,
-      description: `A mock description explaining how ${title.toLowerCase()} could be a factor for ${conceptName.toLowerCase()}.`,
-      sourceURL: 'https://example.com/mock-source',
-    };
-  });
+  const createItems = (prefixes: string[], count: number, offset: number) => {
+    return Array.from({ length: count }, (_, i) => {
+      const prefix = prefixes[(seed + i * offset) % prefixes.length];
+      const baseTitle = conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "");
+      const title = `${prefix} ${baseTitle}`;
+      const titleHash = hashCode(title + i);
+      return {
+        id: `${prefix[0].toLowerCase()}${i}`,
+        title,
+        status: statuses[(seed + i * offset) % statuses.length],
+        upvotes: Math.abs(titleHash) % 200,
+        downvotes: Math.abs(titleHash) % 50,
+        description: `A mock description explaining the causal link related to "${title.toLowerCase()}".`,
+        sourceURL: 'https://example.com/mock-source',
+      };
+    });
+  };
 
-  const effects = Array.from({ length: 3 }, (_, i) => {
-    const prefix = effectPrefixes[(seed + i * 5) % effectPrefixes.length];
-    const title = `${prefix} ${conceptName.replace(/(causes of|effects of|factors leading to|precursors of|origins of|underlying drivers of|consequences of|results of|impacts of|outcomes of)\s/gi, "")}`;
-    const titleHash = hashCode(title);
-    return {
-      id: `e${i}`,
-      title,
-      status: statuses[(seed + i + 1) % statuses.length],
-      upvotes: Math.abs(titleHash) % 250,
-      downvotes: Math.abs(titleHash) % 40,
-      description: `A mock description explaining how ${conceptName.toLowerCase()} could lead to ${title.toLowerCase()}.`,
-      sourceURL: 'https://example.com/mock-source',
-    };
-  });
+  const causes = createItems(causePrefixes, 3, 3);
+  const effects = createItems(effectPrefixes, 3, 5);
 
   return { causes, effects };
 };
 
-
-const statusColors: Record<string, string> = {
-  verified: 'border-green-500 text-green-500',
-  pending: 'border-yellow-500 text-yellow-500',
-  disputed: 'border-orange-500 text-orange-500',
-  rejected: 'border-red-500 text-red-500',
+const statusStyles: Record<string, { bg: string; text: string }> = {
+  verified: { bg: 'bg-green-500/20', text: 'text-green-700 dark:text-green-400' },
+  disputed: { bg: 'bg-yellow-500/20', text: 'text-yellow-700 dark:text-yellow-400' },
+  pending: { bg: 'bg-gray-500/20', text: 'text-gray-700 dark:text-gray-400' },
+  rejected: { bg: 'bg-red-500/20', text: 'text-red-700 dark:text-red-400' },
 };
 
 export default function TablePage() {
@@ -107,58 +88,46 @@ export default function TablePage() {
     </Button>
   );
 
-  const renderTable = (title: string, data: typeof mockData.causes) => (
-    <div>
-      <h2 className="text-2xl font-semibold mb-4">{title}</h2>
-      <Card>
-        <CardContent className="p-0">
-          <div className="space-y-4">
-            {data.map((item) => (
-              <div key={item.id} className="p-4 border-b last:border-b-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                  <div className="md:col-span-1">
-                    <h4 
-                      className="font-medium hover:underline cursor-pointer"
-                      onClick={() => handleConceptClick(item.title)}
-                    >
-                      {item.title}
-                    </h4>
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-muted-foreground mb-2 text-sm">{item.description}</p>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <Badge variant="outline" className={statusColors[item.status]}>
-                          {item.status}
-                        </Badge>
-                        <div className="flex items-center gap-1 text-green-500">
-                          <ArrowUp size={16} />
-                          <span>{item.upvotes}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-red-500">
-                          <ArrowDown size={16} />
-                          <span>{item.downvotes}</span>
-                        </div>
-                      </div>
-                      <a 
-                        href={item.sourceURL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary inline-flex items-center gap-2 text-sm hover:underline"
-                      >
-                        <LinkIcon size={14} />
-                        Source
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+  const ConceptCard = ({ item }: { item: (typeof mockData.causes)[0] }) => {
+    const statusStyle = statusStyles[item.status] || statusStyles.pending;
+    return (
+      <div 
+        className="border rounded-lg p-4 flex flex-col h-full cursor-pointer hover:border-primary/50 hover:shadow-lg transition-all"
+        onClick={() => handleConceptClick(item.title)}
+      >
+        <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+        <p className="text-muted-foreground text-sm flex-grow mb-4">{item.description}</p>
+        
+        <a 
+          href={item.sourceURL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()} // Prevent card click from firing
+          className="text-primary inline-flex items-center gap-2 text-sm hover:underline mb-4"
+        >
+          <LinkIcon size={14} />
+          Source
+        </a>
+
+        <div className="flex items-center justify-between mt-auto">
+          <Badge className={cn('text-xs font-medium px-2 py-1', statusStyle.bg, statusStyle.text)}>
+            {item.status}
+          </Badge>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1 text-green-500">
+              <ArrowUp size={16} />
+              <span>{item.upvotes}</span>
+            </div>
+            <div className="flex items-center gap-1 text-red-500">
+              <ArrowDown size={16} />
+              <span>{item.downvotes}</span>
+            </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <>
@@ -192,9 +161,24 @@ export default function TablePage() {
             </Button>
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-8">
-          {renderTable('Causes', mockData.causes)}
-          {renderTable('Effects', mockData.effects)}
+
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 className="text-2xl font-semibold mb-4">Causes</h2>
+            <div className="grid grid-cols-1 gap-4">
+              {mockData.causes.map((item) => (
+                <ConceptCard key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <h2 className="text-2xl font-semibold mb-4">Effects</h2>
+            <div className="grid grid-cols-1 gap-4">
+              {mockData.effects.map((item) => (
+                <ConceptCard key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       <AddCausalLinkModal
