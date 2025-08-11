@@ -49,8 +49,6 @@ interface D3Node extends NodeData, SimulationNodeDatum {
 interface D3Link extends SimulationLinkDatum<D3Node> {
   id: string;
   status: EdgeData['status'];
-  upvotes: number;
-  downvotes: number;
 }
 
 
@@ -150,55 +148,6 @@ const Edge = ({ link }: { link: D3Link }) => {
         />
     );
 };
-
-const EdgeBadge = ({ link }: { link: D3Link }) => {
-    const source = link.source as D3Node;
-    const target = link.target as D3Node;
-    
-    if (!source.x || !source.y || !target.x || !target.y) {
-      return null;
-    }
-
-    const transform = `translate(${(source.x + target.x) / 2}, ${(source.y + target.y) / 2})`
-
-    return (
-      <g transform={transform}>
-        <foreignObject 
-            x="-75"
-            y="-20"
-            width="150" 
-            height="40"
-            className="overflow-visible"
-          >
-            <div className="bg-background/80 backdrop-blur-sm p-2 rounded-lg border min-w-[150px] z-20 shadow-lg">
-              <div className="flex justify-center items-center gap-4 text-sm">
-                <div className="flex items-center gap-1 text-green-500">
-                  <ArrowUp size={16} />
-                  <span>{link.upvotes}</span>
-                </div>
-                <div className="flex items-center gap-1 text-red-500">
-                  <ArrowDown size={16} />
-                  <span>{link.downvotes}</span>
-                </div>
-                 <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                        <button className="cursor-pointer text-muted-foreground hover:text-foreground">
-                            <Info size={16} />
-                        </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                        <p className="capitalize">Status: <span className={cn(statusColors[link.status]?.replace('stroke-', 'text-'), 'font-semibold')}>{link.status}</span></p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-        </foreignObject>
-      </g>
-    )
-};
-
 
 // Main Graph Component
 const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
@@ -307,9 +256,6 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
                 {links.map((link) => (
                     <Edge key={link.id} link={link} />
                 ))}
-                {links.map((link) => (
-                    <EdgeBadge key={`badge-${link.id}`} link={link} />
-                ))}
                 {nodes.map((node) => (
                     <Node key={node.id} node={node} onClick={handleNodeClick} onDrag={dragHandler(simulation)} />
                 ))}
@@ -332,5 +278,3 @@ const zoomIdentity = {
 };
 
 export default GraphView;
-
-    
