@@ -29,18 +29,17 @@ type EdgeData = {
 };
 
 const generateMockData = (centralConcept: string) => {
-  const conceptSeed = centralConcept.toLowerCase().replace(/\s/g, '');
   const causes = [
     { id: 'c1', title: `Precursor to ${centralConcept}` },
     { id: 'c2', title: `Underlying factor for ${centralConcept}` },
     { id: 'c3', title: `Catalyst for ${centralConcept}` },
-  ].map(c => ({...c, title: `${c.title} (${conceptSeed.substring(0,2)})`}));
+  ];
 
   const effects = [
     { id: 'e1', title: `Consequence of ${centralConcept}` },
     { id: 'e2', title: `Result of ${centralConcept}` },
     { id: 'e3', title: `Aftermath of ${centralConcept}` },
-  ].map(e => ({...e, title: `${e.title} (${conceptSeed.substring(0,2)})`}));
+  ];
   
   return {
     centralNode: { id: 'central', title: centralConcept },
