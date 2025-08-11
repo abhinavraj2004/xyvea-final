@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 
 const mockData = {
@@ -34,9 +34,11 @@ const statusColors: Record<string, string> = {
   rejected: 'border-red-500 text-red-500',
 };
 
-export default function TablePage({ params }: { params: { conceptId: string } }) {
+export default function TablePage() {
   const router = useRouter();
-  const conceptName = decodeURIComponent(params.conceptId).replace(/-/g, ' ');
+  const params = useParams();
+  const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
+  const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
 
   const handleNewSearch = () => {
     router.push('/');
@@ -54,7 +56,7 @@ export default function TablePage({ params }: { params: { conceptId: string } })
           Exploring: <span className="text-primary">{conceptName}</span>
         </h1>
         <div className="flex items-center gap-2">
-          <Link href={`/graph/${params.conceptId}`}>
+          <Link href={`/graph/${conceptId}`}>
             <Button variant="outline">Graph View</Button>
           </Link>
           <Button variant="secondary" onClick={handleNewSearch}>

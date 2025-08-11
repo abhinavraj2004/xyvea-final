@@ -3,11 +3,13 @@
 import GraphView from '@/components/graph/graph-view';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
-export default function GraphPage({ params }: { params: { conceptId: string } }) {
+export default function GraphPage() {
   const router = useRouter();
-  const conceptName = decodeURIComponent(params.conceptId).replace(/-/g, ' ');
+  const params = useParams();
+  const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
+  const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
 
   const handleNewSearch = () => {
     router.push('/');
@@ -20,7 +22,7 @@ export default function GraphPage({ params }: { params: { conceptId: string } })
           Exploring: <span className="text-primary">{conceptName}</span>
         </h1>
         <div className="flex items-center gap-2">
-          <Link href={`/table/${params.conceptId}`}>
+          <Link href={`/table/${conceptId}`}>
             <Button variant="outline">Tabular View</Button>
           </Link>
           <Button variant="secondary" onClick={handleNewSearch}>
@@ -29,7 +31,7 @@ export default function GraphPage({ params }: { params: { conceptId: string } })
         </div>
       </div>
       <div className="mt-8">
-        <GraphView centralConceptId={params.conceptId} />
+        <GraphView centralConceptId={conceptId} />
       </div>
     </div>
   );
