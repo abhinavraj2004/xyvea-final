@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -17,7 +18,9 @@ import {
 import { select, drag, zoom, type D3DragEvent, type ZoomTransform } from 'd3';
 import { cn } from '@/lib/utils';
 import { CausalLink, getLinksForConcept } from '@/lib/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
+import { Button } from '../ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 
 // Data types
@@ -126,8 +129,9 @@ const transformDataForGraph = (causes: CausalLink[], effects: CausalLink[], cent
 }
 
 // Main Graph Component
-const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
+const GraphView = ({ centralConceptId, onContributeClick }: { centralConceptId: string; onContributeClick: () => void; }) => {
   const router = useRouter();
+  const { isLoggedIn, toggleLogin } = useAuth();
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const [simulation, setSimulation] = useState<Simulation<D3Node, D3Link>>();
@@ -211,6 +215,14 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
     }
   };
 
+  const handleContribute = () => {
+    if (isLoggedIn) {
+      onContributeClick();
+    } else {
+      toggleLogin();
+    }
+  }
+
   const dragHandler = (sim: Simulation<D3Node, D3Link> | undefined) => {
     function dragstarted(event: D3DragEvent<any, D3Node, any>) {
       const d = event.subject;
@@ -265,8 +277,13 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
                 </g>
             </svg>
         ) : (
-            <div className="w-full h-full flex justify-center items-center">
-                <p className="text-muted-foreground text-lg">No causal links found for this concept yet.</p>
+            <div className="w-full h-full flex flex-col justify-center items-center text-center p-4">
+                <p className="text-muted-foreground text-xl capitalize">Nothing about '{conceptName}' yet.</p>
+                <p className="text-muted-foreground mt-2 max-w-md">Be the first to add this concept to the knowledge graph and start mapping its connections.</p>
+                <Button onClick={handleContribute} className="mt-6">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Contribute Topic
+                </Button>
             </div>
         )}
     </div>

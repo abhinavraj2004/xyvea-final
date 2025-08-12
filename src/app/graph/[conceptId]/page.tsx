@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { PlusCircle } from 'lucide-react';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
+import AddConceptModal from '@/components/contribute/add-concept-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -17,6 +19,7 @@ export default function GraphPage() {
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [isConceptModalOpen, setIsConceptModalOpen] = useState(false);
 
   const handleNewSearch = () => {
     router.push('/');
@@ -70,13 +73,18 @@ export default function GraphPage() {
           </div>
         </div>
         <div className="mt-8">
-          <GraphView centralConceptId={conceptId} />
+          <GraphView centralConceptId={conceptId} onContributeClick={() => setIsConceptModalOpen(true)} />
         </div>
       </div>
       <AddCausalLinkModal
         isOpen={isLinkModalOpen}
         onOpenChange={setIsLinkModalOpen}
         baseConceptName={conceptName}
+      />
+      <AddConceptModal 
+        isOpen={isConceptModalOpen}
+        onOpenChange={setIsConceptModalOpen}
+        initialTitle={conceptName}
       />
     </>
   );

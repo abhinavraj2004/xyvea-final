@@ -1,5 +1,7 @@
+
 'use client';
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -23,6 +25,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { addConcept } from '@/lib/firestore';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 
 const formSchema = z.object({
@@ -33,27 +38,61 @@ const formSchema = z.object({
 type AddConceptModalProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  initialTitle?: string;
 };
 
-export default function AddConceptModal({ isOpen, onOpenChange }: AddConceptModalProps) {
+export default function AddConceptModal({ isOpen, onOpenChange, initialTitle = '' }: AddConceptModalProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
+      title: initialTitle,
       description: '',
     },
   });
 
+  useEffect(() => {
+    if (initialTitle) {
+      form.setValue('title', initialTitle);
+    }
+  }, [initialTitle, form]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset({ title: '', description: '' });
+    }
+  }, [isOpen, form]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real application, this would call an API to save the new concept.
-    console.log(values);
-    toast({
-      title: 'Concept Submitted',
-      description: 'Your new concept has been added to the graph. Thank you!',
-    });
-    onOpenChange(false);
-    form.reset();
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to add a concept.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await addConcept({ ...values, authorId: user.uid });
+      toast({
+        title: 'Concept Submitted',
+        description: 'Your new concept has been added to the graph. Thank you!',
+      });
+      const formattedTerm = encodeURIComponent(values.title.trim().toLowerCase().replace(/\s/g, '-'));
+      router.push(`/graph/${formattedTerm}`);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error adding concept: ", error);
+      toast({
+        title: 'Error',
+        description: 'There was a problem adding your concept. Please try again.',
+        variant: 'destructive',
+      });
+    }
   }
 
   return (
