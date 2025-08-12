@@ -17,7 +17,7 @@ import {
 } from 'd3-force';
 import { select, drag, zoom, type D3DragEvent, type ZoomTransform } from 'd3';
 import { cn } from '@/lib/utils';
-import { CausalLink, getLinksForConcept } from '@/lib/firestore';
+import { CausalLink, getLinksForConcept, getConceptByTitle } from '@/lib/firestore';
 import { Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -110,7 +110,8 @@ const Edge = ({ link }: { link: D3Link }) => {
 };
 
 const transformDataForGraph = (causes: CausalLink[], effects: CausalLink[], centralConceptId: string) => {
-    const centralNode: NodeData = { id: centralConceptId, title: centralConceptId, type: 'central' };
+    const centralConceptTitle = centralConceptId.toLowerCase();
+    const centralNode: NodeData = { id: centralConceptTitle, title: centralConceptId, type: 'central' };
     
     const causeNodes: NodeData[] = Array.from(new Set(causes.map(c => c.cause.toLowerCase())))
         .map(title => ({ id: title, title, type: 'cause' }));
@@ -120,8 +121,8 @@ const transformDataForGraph = (causes: CausalLink[], effects: CausalLink[], cent
 
     const nodes = [centralNode, ...causeNodes, ...effectNodes];
     
-    const causeEdges: EdgeData[] = causes.map(c => ({ id: c.id, source: c.cause.toLowerCase(), target: centralConceptId, status: c.status }));
-    const effectEdges: EdgeData[] = effects.map(e => ({ id: e.id, source: centralConceptId, target: e.effect.toLowerCase(), status: e.status }));
+    const causeEdges: EdgeData[] = causes.map(c => ({ id: c.id, source: c.cause.toLowerCase(), target: centralConceptTitle, status: c.status }));
+    const effectEdges: EdgeData[] = effects.map(e => ({ id: e.id, source: centralConceptTitle, target: e.effect.toLowerCase(), status: e.status }));
     
     const edges = [...causeEdges, ...effectEdges];
 
@@ -260,7 +261,7 @@ const GraphView = ({ centralConceptId, onContributeClick }: { centralConceptId: 
 
   return (
     <div className="w-full min-h-[70vh] rounded-lg bg-[radial-gradient(hsl(var(--muted-foreground)/0.1)_1px,transparent_1px)] [background-size:24px_24px] border relative overflow-hidden">
-        {graphData.nodes.length > 1 ? (
+        {graphData.edges.length > 0 ? (
             <svg ref={svgRef} width="100%" height="100%" className="min-h-[70vh]">
                 <defs>
                     <marker id="arrow" viewBox="0 0 10 10" refX="15" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -278,12 +279,14 @@ const GraphView = ({ centralConceptId, onContributeClick }: { centralConceptId: 
             </svg>
         ) : (
             <div className="w-full h-full flex flex-col justify-center items-center text-center p-4">
-                <p className="text-muted-foreground text-xl capitalize">Nothing about '{conceptName}' yet.</p>
-                <p className="text-muted-foreground mt-2 max-w-md">Be the first to add this concept to the knowledge graph and start mapping its connections.</p>
-                <Button onClick={handleContribute} className="mt-6">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Contribute Topic
-                </Button>
+                <p className="text-muted-foreground text-xl capitalize">No links for '{conceptName}' yet.</p>
+                <p className="text-muted-foreground mt-2 max-w-md">Be the first to propose a causal link for this concept and help grow the knowledge graph.</p>
+                <Link href="/contribute">
+                    <Button className="mt-6">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Propose a Link
+                    </Button>
+                </Link>
             </div>
         )}
     </div>

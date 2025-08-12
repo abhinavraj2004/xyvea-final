@@ -11,6 +11,7 @@ import {
   updateDoc,
   increment,
   runTransaction,
+  limit,
 } from 'firebase/firestore';
 import type { User, Contribution, ContributionStats, CausalLink, Concept } from '@/types';
 
@@ -22,6 +23,17 @@ export const addConcept = async (concept: Omit<Concept, 'id' | 'createdAt'>) => 
     createdAt: serverTimestamp(),
   });
 };
+
+export const getConceptByTitle = async (title: string): Promise<Concept | null> => {
+  const q = query(collection(db, 'concepts'), where('title', '==', title.toLowerCase()), limit(1));
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    return null;
+  }
+  const doc = querySnapshot.docs[0];
+  return { id: doc.id, ...doc.data() } as Concept;
+};
+
 
 // Causal Links
 export const addCausalLink = async (link: Omit<CausalLink, 'id' | 'createdAt' | 'upvotes' | 'downvotes' | 'status'>) => {
