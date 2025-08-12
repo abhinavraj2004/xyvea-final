@@ -55,16 +55,15 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-4">
+        {/* Desktop Left */}
+        <div className="hidden md:flex items-center gap-4">
           {isLoggedIn && (
-            <div className="hidden md:block">
-              <Button onClick={onToggleSidebar} variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle Sidebar</span>
-              </Button>
-            </div>
+            <Button onClick={onToggleSidebar} variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle Sidebar</span>
+            </Button>
           )}
           <Link href="/" className="flex items-center gap-2">
             <Logo />
@@ -72,54 +71,9 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-2">
-          {!isLoggedIn && (
-            <Button variant="ghost" onClick={handleContribute}>
-              Contribute
-            </Button>
-          )}
-          {isLoggedIn ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="profile avatar" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">User</p>
-                    <p className="text-xs leading-none text-muted-foreground">user@example.com</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">Settings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <>
-              <Button variant="ghost" onClick={handleSignIn}>
-                Log in
-              </Button>
-              <Button onClick={handleSignUp}>Sign up</Button>
-            </>
-          )}
-        </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden">
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        {/* Mobile Left */}
+        <div className="md:hidden flex items-center">
+           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu />
@@ -161,6 +115,62 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                )}
             </SheetContent>
           </Sheet>
+        </div>
+        
+        {/* Mobile Center */}
+        <div className="md:hidden flex items-center">
+            <Link href="/" className="flex items-center gap-2">
+                <Logo />
+                <span className="text-xl font-bold">Xyvea</span>
+            </Link>
+        </div>
+
+        {/* Right side for both Desktop and Mobile */}
+        <div className="flex items-center gap-2">
+          {!isLoggedIn && (
+            <Button variant="ghost" className="hidden md:inline-flex" onClick={handleContribute}>
+              Contribute
+            </Button>
+          )}
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="profile avatar" />
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">User</p>
+                    <p className="text-xs leading-none text-muted-foreground">user@example.com</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className='flex items-center gap-2'>
+              <Button variant="ghost" className='hidden md:inline-flex' onClick={handleSignIn}>
+                Log in
+              </Button>
+              <Button className='hidden md:inline-flex' onClick={handleSignUp}>Sign up</Button>
+               <Button variant="ghost" className="md:hidden" onClick={handleSignIn}>
+                Log in
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>
