@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
@@ -110,11 +110,19 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-full sm:w-[320px]">
+              <SheetHeader>
+                <SheetTitle>
+                   <div className="flex items-center gap-2">
+                    <Logo />
+                    <span className="text-xl font-bold">Xyvea</span>
+                  </div>
+                </SheetTitle>
+                <SheetDescription>
+                  Navigate through Xyvea's features.
+                </SheetDescription>
+              </SheetHeader>
+
               <div className="flex flex-col h-full">
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <Logo />
-                  <span className="text-xl font-bold">Xyvea</span>
-                </div>
                 <div className="flex flex-col gap-4 py-4 flex-grow">
                   <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
                     Contribute
