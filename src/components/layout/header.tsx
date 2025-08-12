@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -75,15 +74,14 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                    <SheetTitle>
                     <div className="flex items-center gap-2">
                       <Logo />
-                      <span className="text-xl font-bold">Xyvea</span>
+                      <span className="text-xl font-bold">CausalCanvas</span>
                     </div>
                   </SheetTitle>
                 </SheetHeader>
                  {user ? (
                    <Sidebar isSheet={true} onLinkClick={() => setIsSheetOpen(false)} />
                  ) : (
-                  <>
-                    <div className="flex flex-col p-4">
+                  <div className="flex flex-col h-full p-4">
                       <div className="flex flex-col gap-4">
                           <Button variant="ghost" className="justify-start text-lg" onClick={() => handleNavigate('/contribute')}>
                             Contribute
@@ -103,7 +101,6 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                         </div>
                       </div>
                     </div>
-                  </>
                  )}
               </SheetContent>
             </Sheet>
@@ -111,7 +108,7 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
 
           <Link href="/" className="flex items-center gap-2">
             <Logo />
-            <span className="text-xl font-bold">Xyvea</span>
+            <span className="text-xl font-bold">CausalCanvas</span>
           </Link>
         </div>
 

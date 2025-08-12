@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -24,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, { message: "Display name must be at least 2 characters." }),
@@ -31,25 +31,38 @@ const profileFormSchema = z.object({
 });
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const profileForm = useForm({
     resolver: zodResolver(profileFormSchema),
+    // Use user data for default values, with fallbacks
     defaultValues: {
-      displayName: "Alex Researcher",
-      email: "alex.r@example.com",
+      displayName: user?.displayName || "",
+      email: user?.email || "",
     },
   });
 
   function onProfileSubmit(data: z.infer<typeof profileFormSchema>) {
     console.log("Profile updated:", data);
-    // In a real app, you would call an API here.
+    // In a real app, you would call an API here to update the user profile
   }
   
   const handleDeleteAccount = () => {
     console.log("Account deletion initiated.");
-    // In a real app, you would call an API here.
+    // In a real app, you would call an API here to delete the account
     setIsDeleteDialogOpen(false);
+  }
+  
+  if (!user) {
+     return (
+       <div className="container mx-auto max-w-4xl px-4 py-12 text-center">
+         <p>Please log in to view settings.</p>
+         <Link href="/auth/signin">
+            <Button className="mt-4">Log In</Button>
+         </Link>
+       </div>
+    )
   }
 
   return (
@@ -69,8 +82,8 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src="https://placehold.co/100x100.png" alt="User avatar" data-ai-hint="user avatar" />
-                  <AvatarFallback>AR</AvatarFallback>
+                  <AvatarImage src={user.photoURL} alt={user.displayName} data-ai-hint="user avatar" />
+                  <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <Button type="button" variant="outline">Change Photo</Button>
               </div>
@@ -123,7 +136,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="weekly-digest" className="font-medium">Weekly Digest</Label>
-                <p className="text-sm text-muted-foreground">Get a summary of trending topics on Xyvea.</p>
+                <p className="text-sm text-muted-foreground">Get a summary of trending topics on CausalCanvas.</p>
               </div>
               <Switch id="weekly-digest" />
             </div>

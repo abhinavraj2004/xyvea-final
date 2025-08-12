@@ -1,5 +1,5 @@
-
-import type { Timestamp } from 'firebase/firestore';
+// Using native Date instead of Firestore Timestamp
+// import type { Timestamp } from 'firebase/firestore';
 
 export type User = {
   uid: string;
@@ -14,7 +14,7 @@ export type User = {
 export type HistoryItem = {
   id: string;
   searchTerm: string;
-  timestamp: Timestamp;
+  timestamp: Date; // Changed from Timestamp
 };
 
 export type Concept = {
@@ -22,7 +22,7 @@ export type Concept = {
   title: string;
   description: string;
   authorId: string;
-  createdAt: Timestamp;
+  createdAt: Date; // Changed from Timestamp
 };
 
 export type CausalLink = {
@@ -35,7 +35,7 @@ export type CausalLink = {
   status: 'pending' | 'verified' | 'disputed' | 'rejected';
   upvotes: number;
   downvotes: number;
-  createdAt: Timestamp;
+  createdAt: Date; // Changed from Timestamp
 };
 
 
@@ -43,7 +43,7 @@ export type Contribution = {
   id: string;
   type: 'link' | 'concept';
   description: string;
-  createdAt: Timestamp;
+  createdAt: Date; // Changed from Timestamp
 };
 
 export type ContributionStats = {

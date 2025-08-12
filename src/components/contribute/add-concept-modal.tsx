@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -80,7 +79,7 @@ export default function AddConceptModal({ isOpen, onOpenChange, initialTitle = '
       await addConcept({ ...values, authorId: user.uid });
       toast({
         title: 'Concept Submitted',
-        description: 'Your new concept has been added to the graph. Thank you!',
+        description: 'Your new concept has been added. Thank you!',
       });
       const formattedTerm = encodeURIComponent(values.title.trim().toLowerCase().replace(/\s/g, '-'));
       router.push(`/graph/${formattedTerm}`);

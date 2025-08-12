@@ -1,144 +1,72 @@
+// This file is a placeholder for your database logic.
+// You can replace these functions with your Neo4j data fetching logic.
 
-import { db } from './firebase';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  serverTimestamp,
-  doc,
-  updateDoc,
-  increment,
-  runTransaction,
-  limit,
-} from 'firebase/firestore';
 import type { User, Contribution, ContributionStats, CausalLink, Concept } from '@/types';
+
+// Mock Data
+const mockConcepts: Concept[] = [
+  { id: '1', title: 'climate change', description: 'A long-term change in the average weather patterns that have come to define Earth\'s local, regional and global climates.', authorId: '1', createdAt: new Date() },
+  { id: '2', title: 'greenhouse gas emissions', description: 'Gases in Earth\'s atmosphere that trap heat.', authorId: '1', createdAt: new Date() },
+  { id: '3', title: 'global warming', description: 'The long-term heating of Earth\'s climate system observed since the pre-industrial period.', authorId: '1', createdAt: new Date() },
+];
+
+const mockLinks: CausalLink[] = [
+  { id: '1', cause: 'greenhouse gas emissions', effect: 'global warming', description: 'Increased greenhouse gases from human activities are the primary driver of global warming.', sourceURL: 'https://www.nasa.gov/climatechange/what-is-climate-change/', authorId: '1', status: 'verified', upvotes: 150, downvotes: 10, createdAt: new Date() },
+  { id: '2', cause: 'global warming', effect: 'climate change', description: 'Global warming is a major aspect of climate change, contributing to wider-ranging changes in weather patterns.', sourceURL: 'https://www.nrdc.org/stories/global-warming-101', authorId: '1', status: 'verified', upvotes: 120, downvotes: 5, createdAt: new Date() },
+];
 
 
 // Concepts
-export const addConcept = async (concept: Omit<Concept, 'id' | 'createdAt'>) => {
-  await addDoc(collection(db, 'concepts'), {
-    ...concept,
-    createdAt: serverTimestamp(),
-  });
+export const addConcept = async (concept: Omit<Concept, 'id' | 'createdAt'>): Promise<void> => {
+  console.log('Attempting to add concept:', concept);
+  // Replace with your Neo4j logic, e.g.,
+  // const session = driver.session();
+  // await session.run('CREATE (c:Concept { ... })', { ...concept });
+  // await session.close();
 };
 
 export const getConceptByTitle = async (title: string): Promise<Concept | null> => {
-  const q = query(collection(db, 'concepts'), where('title', '==', title.toLowerCase()), limit(1));
-  const querySnapshot = await getDocs(q);
-  if (querySnapshot.empty) {
-    return null;
-  }
-  const doc = querySnapshot.docs[0];
-  return { id: doc.id, ...doc.data() } as Concept;
+  console.log('Fetching concept by title:', title);
+  const concept = mockConcepts.find(c => c.title.toLowerCase() === title.toLowerCase());
+  return Promise.resolve(concept || null);
 };
 
 
 // Causal Links
-export const addCausalLink = async (link: Omit<CausalLink, 'id' | 'createdAt' | 'upvotes' | 'downvotes' | 'status'>) => {
-  await addDoc(collection(db, 'causalLinks'), {
-    ...link,
-    upvotes: 0,
-    downvotes: 0,
-    status: 'pending',
-    createdAt: serverTimestamp(),
-  });
+export const addCausalLink = async (link: Omit<CausalLink, 'id' | 'createdAt' | 'upvotes' | 'downvotes' | 'status'>): Promise<void> => {
+  console.log('Attempting to add causal link:', link);
+  // Replace with your Neo4j logic
 };
 
-export const getLinksForConcept = async (conceptTitle: string) => {
+export const getLinksForConcept = async (conceptTitle: string): Promise<{ causes: CausalLink[], effects: CausalLink[] }> => {
+  console.log('Fetching links for concept:', conceptTitle);
   const lowercasedTitle = conceptTitle.toLowerCase();
   
-  const causesQuery = query(collection(db, 'causalLinks'), where('effect', '==', lowercasedTitle));
-  const effectsQuery = query(collection(db, 'causalLinks'), where('cause', '==', lowercasedTitle));
-
-  const [causesSnapshot, effectsSnapshot] = await Promise.all([
-    getDocs(causesQuery),
-    getDocs(effectsQuery)
-  ]);
-
-  const causes = causesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CausalLink));
-  const effects = effectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CausalLink));
-
-  return { causes, effects };
+  const causes = mockLinks.filter(link => link.effect.toLowerCase() === lowercasedTitle);
+  const effects = mockLinks.filter(link => link.cause.toLowerCase() === lowercasedTitle);
+  
+  return Promise.resolve({ causes, effects });
 }
 
-export const voteOnLink = async (linkId: string, userId: string, voteType: 'up' | 'down') => {
-  const linkRef = doc(db, 'causalLinks', linkId);
-  const userVoteRef = doc(db, `causalLinks/${linkId}/votes/${userId}`);
-
-  await runTransaction(db, async (transaction) => {
-    const userVoteDoc = await transaction.get(userVoteRef);
-    const linkDoc = await transaction.get(linkRef);
-
-    if (!linkDoc.exists()) {
-      throw new Error("Link does not exist!");
-    }
-
-    const currentVote = userVoteDoc.exists() ? userVoteDoc.data().vote : null;
-
-    if (currentVote === voteType) {
-      // User is undoing their vote
-      transaction.update(linkRef, { [`${voteType}votes`]: increment(-1) });
-      transaction.delete(userVoteRef);
-    } else {
-      const updates: { [key: string]: any } = {};
-      if (currentVote) {
-        // User is changing their vote
-        const oppositeVote = voteType === 'up' ? 'down' : 'up';
-        updates[`${oppositeVote}votes`] = increment(-1);
-      }
-      updates[`${voteType}votes`] = increment(1);
-      
-      transaction.update(linkRef, updates);
-      transaction.set(userVoteRef, { vote: voteType });
-    }
-  });
+export const voteOnLink = async (linkId: string, userId: string, voteType: 'up' | 'down'): Promise<void> => {
+  console.log(`User ${userId} attempting to ${voteType}vote on link ${linkId}`);
+  // Replace with your Neo4j logic to handle voting
 };
 
 
 // User Data
-export const getUserContributions = async (userId: string) => {
-    const linksQuery = query(collection(db, 'causalLinks'), where('authorId', '==', userId));
-    const conceptsQuery = query(collection(db, 'concepts'), where('authorId', '==', userId));
+export const getUserContributions = async (userId: string): Promise<{ contributions: Contribution[], stats: ContributionStats }> => {
+  console.log('Fetching contributions for user:', userId);
+  
+  const contributions: Contribution[] = [
+    { id: '1', type: 'link', description: 'Proposed link: Greenhouse Gas Emissions -> Global Warming', createdAt: new Date(Date.now() - 86400000) },
+    { id: '2', type: 'concept', description: 'Added concept: Climate Change', createdAt: new Date(Date.now() - 172800000) },
+  ];
+  
+  const stats: ContributionStats = {
+    totalContributions: 2,
+    verifiedLinks: 1,
+  };
 
-    const [linksSnapshot, conceptsSnapshot] = await Promise.all([
-        getDocs(linksQuery),
-        getDocs(conceptsQuery)
-    ]);
-
-    const contributions: Contribution[] = [];
-    let verifiedLinks = 0;
-
-    linksSnapshot.forEach(doc => {
-        const data = doc.data() as CausalLink;
-        if (data.status === 'verified') {
-            verifiedLinks++;
-        }
-        contributions.push({
-            id: doc.id,
-            type: 'link',
-            description: `Proposed link: ${data.cause} -> ${data.effect}`,
-            createdAt: data.createdAt,
-        });
-    });
-
-    conceptsSnapshot.forEach(doc => {
-        const data = doc.data() as Concept;
-        contributions.push({
-            id: doc.id,
-            type: 'concept',
-            description: `Added concept: ${data.title}`,
-            createdAt: data.createdAt,
-        });
-    });
-
-    contributions.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate());
-
-    const stats: ContributionStats = {
-        totalContributions: contributions.length,
-        verifiedLinks,
-    };
-
-    return { contributions, stats };
+  return Promise.resolve({ contributions, stats });
 }

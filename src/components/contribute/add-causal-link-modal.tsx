@@ -118,7 +118,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
 
       toast({
         title: 'Contribution Submitted',
-        description: 'Your causal link has been submitted for review. Thank you!',
+        description: 'Your causal link has been submitted. Thank you!',
       });
       onLinkAdded?.();
       onOpenChange(false);

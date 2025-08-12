@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -10,7 +9,6 @@ import { List, GitFork, CheckCircle, Pencil, Star, Loader2 } from "lucide-react"
 import Link from "next/link";
 import { useAuth } from '@/hooks/use-auth';
 import { getUserContributions, Contribution, ContributionStats } from '@/lib/firestore';
-import { formatDistanceToNow } from 'date-fns';
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
@@ -124,7 +122,7 @@ export default function ProfilePage() {
                     <div className="flex-grow">
                       <p className="text-muted-foreground flex-grow">{activity.description}</p>
                       <p className="text-xs text-muted-foreground/70 mt-1">
-                        {formatDistanceToNow(activity.createdAt.toDate(), { addSuffix: true })}
+                        {new Date(activity.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </li>
