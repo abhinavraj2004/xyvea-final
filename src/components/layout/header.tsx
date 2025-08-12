@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
@@ -49,7 +49,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
@@ -113,14 +113,18 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-full sm:w-[320px] p-0">
+              <SheetHeader className="p-4 border-b">
+                <SheetTitle>
+                  <div className="flex items-center gap-2">
+                    <Logo />
+                    <span className="text-xl font-bold">Xyvea</span>
+                  </div>
+                </SheetTitle>
+              </SheetHeader>
                {isLoggedIn ? (
                  <Sidebar isSheet={true} onLinkClick={() => setIsSheetOpen(false)} />
                ) : (
                 <>
-                  <div className="flex items-center gap-2 p-4 border-b">
-                    <Logo />
-                    <span className="text-xl font-bold">Xyvea</span>
-                  </div>
                   <div className="flex flex-col h-full p-4">
                     <div className="flex flex-col gap-4 flex-grow">
                       <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
