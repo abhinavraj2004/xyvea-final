@@ -6,20 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import { PlusCircle, MessageSquare, Settings, User, LogOut } from 'lucide-react';
+import { PlusCircle, MessageSquare, Settings, User, LogOut, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-
-const mockHistory = [
-  "Causes of Climate Change",
-  "Impact of AI on Jobs",
-  "Economic effects of remote work",
-  "Factors influencing vaccination rates",
-  "History of the Roman Empire",
-  "Principles of Quantum Mechanics",
-  "The rise of social media",
-  "Renewable energy sources",
-];
+import { useEffect, useState } from 'react';
+import { HistoryItem } from '@/types';
 
 
 type SidebarProps = {
@@ -30,7 +20,7 @@ type SidebarProps = {
 
 
 export default function Sidebar({ isSheet = false, onLinkClick, isVisible = true }: SidebarProps) {
-  const { toggleLogin } = useAuth();
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
 
   const handleContribute = () => {
@@ -44,12 +34,12 @@ export default function Sidebar({ isSheet = false, onLinkClick, isVisible = true
   };
   
   const handleLogout = () => {
-    toggleLogin();
+    logout();
     onLinkClick?.();
   };
 
-  const handleHistoryClick = (item: string) => {
-    const formattedTerm = encodeURIComponent(item.trim().toLowerCase().replace(/\s/g, '-'));
+  const handleHistoryClick = (item: HistoryItem) => {
+    const formattedTerm = encodeURIComponent(item.searchTerm.trim().toLowerCase().replace(/\s/g, '-'));
     router.push(`/graph/${formattedTerm}`);
     onLinkClick?.();
   }
@@ -67,21 +57,31 @@ export default function Sidebar({ isSheet = false, onLinkClick, isVisible = true
           <h2 className="text-lg font-semibold tracking-tight">History</h2>
         </div>
         <div className="flex-1 flex flex-col min-h-0">
-          <ScrollArea className="flex-1 px-2">
-            <div className="space-y-1">
-              {mockHistory.map((item) => (
-                <Button
-                  key={item}
-                  variant="ghost"
-                  className="w-full justify-start font-normal truncate"
-                  onClick={() => handleHistoryClick(item)}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  {item}
-                </Button>
-              ))}
-            </div>
-          </ScrollArea>
+          {loading ? (
+             <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
+             </div>
+          ) : (
+            <ScrollArea className="flex-1 px-2">
+              <div className="space-y-1">
+                {user?.searchHistory && user.searchHistory.length > 0 ? (
+                    user.searchHistory.map((item) => (
+                    <Button
+                        key={item.id}
+                        variant="ghost"
+                        className="w-full justify-start font-normal truncate"
+                        onClick={() => handleHistoryClick(item)}
+                    >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        {item.searchTerm}
+                    </Button>
+                    ))
+                ) : (
+                    <p className="text-sm text-muted-foreground p-2">No history yet.</p>
+                )}
+              </div>
+            </ScrollArea>
+          )}
         </div>
       </div>
       

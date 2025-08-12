@@ -15,14 +15,9 @@ import {
   type SimulationLinkDatum,
 } from 'd3-force';
 import { select, drag, zoom, type D3DragEvent, type ZoomTransform } from 'd3';
-import { ArrowDown, ArrowUp, Info } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
+import { CausalLink, getLinksForConcept } from '@/lib/firestore';
+import { Loader2 } from 'lucide-react';
 
 
 // Data types
@@ -37,8 +32,6 @@ type EdgeData = {
   source: string;
   target: string;
   status: 'verified' | 'pending' | 'disputed' | 'rejected';
-  upvotes: number;
-  downvotes: number;
 };
 
 // D3 Simulation types
@@ -51,49 +44,6 @@ interface D3Link extends SimulationLinkDatum<D3Node> {
   status: EdgeData['status'];
 }
 
-
-// Mock Data Generation
-const generateMockData = (centralConceptId: string) => {
-    const conceptName = decodeURIComponent(centralConceptId).replace(/-/g, ' ');
-    const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
-    const seed = hashCode(conceptName);
-
-    const causePrefixes = ['Factors leading to', 'Precursors of', 'Origins of', 'Underlying drivers of'];
-    const effectPrefixes = ['Consequences of', 'Results of', 'Impacts of', 'Outcomes of'];
-    
-    // Improved baseTitle logic to avoid "undefined"
-    const prefixesToRemove = ['causes of', 'effects of', 'factors leading to', 'precursors of', 'origins of', 'underlying drivers of', 'consequences of', 'results of', 'impacts of', 'outcomes of'];
-    let baseTitle = conceptName;
-    prefixesToRemove.forEach(p => {
-        baseTitle = baseTitle.replace(new RegExp(`^${p}\\s`, 'i'), '');
-    });
-
-
-    const createItems = (prefixes: string[], count: number, offset: number) => {
-        return Array.from({ length: count }, (_, i) => {
-            const prefix = prefixes[(seed + i * offset) % prefixes.length] || "Related to";
-            const title = `${prefix} ${baseTitle}`;
-            return { title };
-        });
-    };
-    
-    const causesData = createItems(causePrefixes, 3, 3);
-    const effectsData = createItems(effectPrefixes, 4, 5);
-
-    const causes: NodeData[] = causesData.map((d, i) => ({ id: `c${i}`, title: d.title, type: 'cause' }));
-    const effects: NodeData[] = effectsData.map((d, i) => ({ id: `e${i}`, title: d.title, type: 'effect' }));
-    const centralNode: NodeData = { id: 'central', title: conceptName, type: 'central' };
-
-    const nodes = [centralNode, ...causes, ...effects];
-    
-    const statuses: EdgeData['status'][] = ['verified', 'pending', 'disputed', 'rejected'];
-    const causeEdges: EdgeData[] = causes.map((c, i) => ({ id: `ce${i}`, source: c.id, target: 'central', status: statuses[(seed + i) % statuses.length], upvotes: Math.abs(hashCode(c.title)) % 200, downvotes: Math.abs(hashCode(c.title)) % 50 }));
-    const effectEdges: EdgeData[] = effects.map((e, i) => ({ id: `ee${i}`, source: 'central', target: e.id, status: statuses[(seed + i + 1) % statuses.length], upvotes: Math.abs(hashCode(e.title)) % 250, downvotes: Math.abs(hashCode(e.title)) % 40 }));
-    
-    const edges = [...causeEdges, ...effectEdges];
-
-    return { nodes, edges };
-};
 
 // Styling
 const statusColors: Record<EdgeData['status'], string> = {
@@ -156,14 +106,36 @@ const Edge = ({ link }: { link: D3Link }) => {
     );
 };
 
+const transformDataForGraph = (causes: CausalLink[], effects: CausalLink[], centralConceptId: string) => {
+    const centralNode: NodeData = { id: centralConceptId, title: centralConceptId, type: 'central' };
+    
+    const causeNodes: NodeData[] = Array.from(new Set(causes.map(c => c.cause.toLowerCase())))
+        .map(title => ({ id: title, title, type: 'cause' }));
+
+    const effectNodes: NodeData[] = Array.from(new Set(effects.map(e => e.effect.toLowerCase())))
+        .map(title => ({ id: title, title, type: 'effect' }));
+
+    const nodes = [centralNode, ...causeNodes, ...effectNodes];
+    
+    const causeEdges: EdgeData[] = causes.map(c => ({ id: c.id, source: c.cause.toLowerCase(), target: centralConceptId, status: c.status }));
+    const effectEdges: EdgeData[] = effects.map(e => ({ id: e.id, source: centralConceptId, target: e.effect.toLowerCase(), status: e.status }));
+    
+    const edges = [...causeEdges, ...effectEdges];
+
+    return { nodes, edges };
+}
+
 // Main Graph Component
 const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
   const router = useRouter();
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const [simulation, setSimulation] = useState<Simulation<D3Node, D3Link>>();
+  const [loading, setLoading] = useState(true);
   
-  const { nodes: initialNodes, edges: initialEdges } = useMemo(() => generateMockData(centralConceptId), [centralConceptId]);
+  const conceptName = useMemo(() => decodeURIComponent(centralConceptId).replace(/-/g, ' '), [centralConceptId]);
+
+  const [graphData, setGraphData] = useState<{nodes: NodeData[], edges: EdgeData[]}>({nodes: [], edges: []});
 
   const [nodes, setNodes] = useState<D3Node[]>([]);
   const [links, setLinks] = useState<D3Link[]>([]);
@@ -171,13 +143,25 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
 
 
   useEffect(() => {
-    if (!svgRef.current || !initialNodes.length) return;
+      const fetchData = async () => {
+        setLoading(true);
+        const { causes, effects } = await getLinksForConcept(conceptName);
+        const transformedData = transformDataForGraph(causes, effects, conceptName);
+        setGraphData(transformedData);
+        setLoading(false);
+      }
+      fetchData();
+  }, [conceptName]);
+
+
+  useEffect(() => {
+    if (!svgRef.current || !graphData.nodes.length || loading) return;
     
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
 
-    const simulationNodes: D3Node[] = initialNodes.map(node => ({...node, x: Math.random() * width, y: Math.random() * height}));
-    const simulationLinks: D3Link[] = initialEdges.map(edge => ({...edge, source: edge.source, target: edge.target}));
+    const simulationNodes: D3Node[] = graphData.nodes.map(node => ({...node, x: Math.random() * width, y: Math.random() * height}));
+    const simulationLinks: D3Link[] = graphData.edges.map(edge => ({...edge, source: edge.source, target: edge.target}));
     
     const centralNode = simulationNodes.find(n => n.type === 'central');
     if (centralNode) {
@@ -218,7 +202,7 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
         sim.stop();
     };
 
-  }, [initialNodes, initialEdges]);
+  }, [graphData, loading]);
 
   const handleNodeClick = (title: string) => {
     if (currentZoom.k === 1 && currentZoom.x === 0 && currentZoom.y === 0) { // crude way to check if drag happened
@@ -254,23 +238,37 @@ const GraphView = ({ centralConceptId }: { centralConceptId: string }) => {
       .on('end', dragended);
   };
   
+  if (loading) {
+    return (
+        <div className="w-full min-h-[70vh] flex justify-center items-center">
+            <Loader2 className="h-16 w-16 animate-spin" />
+        </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-[70vh] rounded-lg bg-[radial-gradient(hsl(var(--muted-foreground)/0.1)_1px,transparent_1px)] [background-size:24px_24px] border relative overflow-hidden">
-        <svg ref={svgRef} width="100%" height="100%" className="min-h-[70vh]">
-            <defs>
-                <marker id="arrow" viewBox="0 0 10 10" refX="15" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" className="fill-border" />
-                </marker>
-            </defs>
-            <g ref={gRef}>
-                {links.map((link) => (
-                    <Edge key={link.id} link={link} />
-                ))}
-                {nodes.map((node) => (
-                    <Node key={node.id} node={node} onClick={handleNodeClick} onDrag={dragHandler(simulation)} />
-                ))}
-            </g>
-        </svg>
+        {graphData.nodes.length > 1 ? (
+            <svg ref={svgRef} width="100%" height="100%" className="min-h-[70vh]">
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="15" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" className="fill-border" />
+                    </marker>
+                </defs>
+                <g ref={gRef}>
+                    {links.map((link) => (
+                        <Edge key={link.id} link={link} />
+                    ))}
+                    {nodes.map((node) => (
+                        <Node key={node.id} node={node} onClick={handleNodeClick} onDrag={dragHandler(simulation)} />
+                    ))}
+                </g>
+            </svg>
+        ) : (
+            <div className="w-full h-full flex justify-center items-center">
+                <p className="text-muted-foreground text-lg">No causal links found for this concept yet.</p>
+            </div>
+        )}
     </div>
   );
 };
