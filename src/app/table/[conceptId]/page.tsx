@@ -46,10 +46,10 @@ const generateMockData = (conceptId: string) => {
 };
 
 const statusStyles: Record<string, string> = {
-  verified: 'bg-green-500 text-green-950',
-  disputed: 'bg-yellow-500 text-yellow-950',
-  pending: 'bg-gray-500 text-white',
-  rejected: 'bg-red-500 text-white',
+  verified: 'bg-green-500/20 border-green-500 text-green-300',
+  disputed: 'bg-yellow-500/20 border-yellow-500 text-yellow-300',
+  pending: 'bg-gray-500/20 border-gray-500 text-gray-300',
+  rejected: 'bg-red-500/20 border-red-500 text-red-300',
 };
 
 type ConceptCardProps = {
@@ -85,7 +85,7 @@ const ConceptCard = ({ item, isSelected, onSelect, onNavigate }: ConceptCardProp
       </a>
 
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/50">
-        <Badge className={cn('text-xs font-medium px-2 py-1 border-transparent hover:bg-none', statusStyle)}>
+        <Badge className={cn('text-xs font-medium px-2 py-1', statusStyle)} variant="outline">
           {item.status}
         </Badge>
         <div className="flex items-center gap-4 text-sm">
@@ -158,22 +158,26 @@ export default function TablePage() {
             Exploring: <span className="text-primary">{conceptName}</span>
           </h1>
           <div className="flex items-center gap-2">
-            {!isLoggedIn ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="cursor-pointer" onClick={(e) => { if (isProposeDisabled) e.preventDefault(); else handleProposeLinkClick(); }}>
-                       <ProposeLinkButton />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                     {isProposeDisabled ? <p>Select a cause and an effect to propose a link.</p> : <p>You must be logged in to propose a link.</p>}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-               <ProposeLinkButton />
-            )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {/* The div is necessary to ensure the tooltip works when the button is disabled */}
+                  <div className="cursor-pointer" onClick={(e) => { if (isProposeDisabled) e.preventDefault(); }}>
+                     <ProposeLinkButton />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                   {!isLoggedIn ? (
+                     <p>You must be logged in to propose a link.</p>
+                   ) : isProposeDisabled ? (
+                     <p>Select a cause and an effect to propose a link.</p>
+                   ) : (
+                    <p>Create a new link between the selected concepts.</p>
+                   )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <Link href={`/graph/${conceptId}`}>
               <Button variant="outline">Graph View</Button>
             </Link>
