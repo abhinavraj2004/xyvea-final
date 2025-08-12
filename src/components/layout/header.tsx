@@ -53,7 +53,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo />
-            <span className="text-xl font-bold">CausalCanvas</span>
+            <span className="text-xl font-bold">Xyvea</span>
           </Link>
         </div>
 
@@ -113,7 +113,7 @@ export default function Header() {
               <div className="flex flex-col h-full">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Logo />
-                  <span className="text-xl font-bold">CausalCanvas</span>
+                  <span className="text-xl font-bold">Xyvea</span>
                 </div>
                 <div className="flex flex-col gap-4 py-4 flex-grow">
                   <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
