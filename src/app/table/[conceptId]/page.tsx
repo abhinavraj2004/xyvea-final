@@ -10,6 +10,7 @@ import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const generateMockData = (conceptId: string) => {
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
@@ -46,10 +47,10 @@ const generateMockData = (conceptId: string) => {
 };
 
 const statusStyles: Record<string, string> = {
-  verified: 'bg-green-500/20 border-green-500 text-green-300',
-  disputed: 'bg-yellow-500/20 border-yellow-500 text-yellow-300',
-  pending: 'bg-gray-500/20 border-gray-500 text-gray-300',
-  rejected: 'bg-red-500/20 border-red-500 text-red-300',
+  verified: 'bg-green-100 border-green-300 text-green-800 dark:bg-green-500/20 dark:border-green-500 dark:text-green-300',
+  disputed: 'bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-500/20 dark:border-yellow-500 dark:text-yellow-300',
+  pending: 'bg-gray-200 border-gray-400 text-gray-700 dark:bg-gray-500/20 dark:border-gray-500 dark:text-gray-300',
+  rejected: 'bg-red-100 border-red-300 text-red-800 dark:bg-red-500/20 dark:border-red-500 dark:text-red-300',
 };
 
 type ConceptCardProps = {
@@ -61,7 +62,18 @@ type ConceptCardProps = {
 
 
 const ConceptCard = ({ item, isSelected, onSelect, onNavigate }: ConceptCardProps) => {
+  const { toast } = useToast();
   const statusStyle = statusStyles[item.status] || statusStyles.pending;
+
+  const handleVote = (e: React.MouseEvent, voteType: 'up' | 'down') => {
+    e.stopPropagation();
+    console.log(`Voted ${voteType} on:`, item.title);
+    toast({
+      title: 'Vote Recorded',
+      description: `Your ${voteType}vote for "${item.title}" has been recorded.`,
+    });
+  };
+
   return (
     <div
       className={cn(
@@ -89,14 +101,24 @@ const ConceptCard = ({ item, isSelected, onSelect, onNavigate }: ConceptCardProp
           {item.status}
         </Badge>
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1 text-green-500">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 text-green-500 hover:bg-green-500/10 hover:text-green-500"
+            onClick={(e) => handleVote(e, 'up')}
+          >
             <ArrowUp size={16} />
             <span>{item.upvotes}</span>
-          </div>
-          <div className="flex items-center gap-1 text-red-500">
+          </Button>
+          <Button
+             variant="ghost"
+             size="sm"
+             className="flex items-center gap-1 text-red-500 hover:bg-red-500/10 hover:text-red-500"
+             onClick={(e) => handleVote(e, 'down')}
+          >
             <ArrowDown size={16} />
             <span>{item.downvotes}</span>
-          </div>
+          </Button>
         </div>
       </div>
     </div>
