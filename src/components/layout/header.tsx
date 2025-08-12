@@ -12,11 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
 import { Menu } from 'lucide-react';
+import Sidebar from '@/components/layout/sidebar';
 
 export default function Header() {
   const { isLoggedIn, toggleLogin, setLoggedIn } = useAuth();
@@ -48,20 +49,22 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-transparent">
-      <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo />
-            <span className="text-xl font-bold">Xyvea</span>
+            <span className="text-xl font-bold hidden sm:inline-block">Xyvea</span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-2">
-          <Button variant="ghost" onClick={handleContribute}>
-            Contribute
-          </Button>
+          {!isLoggedIn && (
+            <Button variant="ghost" onClick={handleContribute}>
+              Contribute
+            </Button>
+          )}
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -109,51 +112,35 @@ export default function Header() {
                 <span className="sr-only">Open Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:w-[320px]">
-              <SheetHeader>
-                <SheetTitle>
-                   <div className="flex items-center gap-2">
+            <SheetContent side="left" className="w-full sm:w-[320px] p-0">
+               {isLoggedIn ? (
+                 <Sidebar isSheet={true} onLinkClick={() => setIsSheetOpen(false)} />
+               ) : (
+                <>
+                  <div className="flex items-center gap-2 p-4 border-b">
                     <Logo />
                     <span className="text-xl font-bold">Xyvea</span>
                   </div>
-                </SheetTitle>
-                <SheetDescription>
-                  Navigate through Xyvea's features.
-                </SheetDescription>
-              </SheetHeader>
-
-              <div className="flex flex-col h-full">
-                <div className="flex flex-col gap-4 py-4 flex-grow">
-                  <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
-                    Contribute
-                  </Button>
-                  {isLoggedIn && (
-                    <>
-                     <Link href="/profile" onClick={() => setIsSheetOpen(false)}>
-                        <Button variant="ghost" className="w-full justify-start text-lg">Profile</Button>
-                     </Link>
-                     <Link href="/settings" onClick={() => setIsSheetOpen(false)}>
-                        <Button variant="ghost" className="w-full justify-start text-lg">Settings</Button>
-                      </Link>
-                    </>
-                  )}
-                </div>
-
-                <div className="mt-auto border-t pt-4">
-                  {isLoggedIn ? (
-                    <Button className="w-full" onClick={handleLogout}>Log Out</Button>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <Button variant="outline" className="w-full" onClick={handleSignIn}>
-                        Log In
-                      </Button>
-                      <Button className="w-full" onClick={handleSignUp}>
-                        Sign Up
+                  <div className="flex flex-col h-full p-4">
+                    <div className="flex flex-col gap-4 flex-grow">
+                      <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
+                        Contribute
                       </Button>
                     </div>
-                  )}
-                </div>
-              </div>
+
+                    <div className="mt-auto border-t pt-4">
+                      <div className="flex flex-col gap-2">
+                        <Button variant="outline" className="w-full" onClick={handleSignIn}>
+                          Log In
+                        </Button>
+                        <Button className="w-full" onClick={handleSignUp}>
+                          Sign Up
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+               )}
             </SheetContent>
           </Sheet>
         </div>
