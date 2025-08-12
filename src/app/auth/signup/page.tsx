@@ -64,7 +64,7 @@ export default function SignUpPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl">Create an Account</CardTitle>
-          <CardDescription>Join CausalCanvas to start mapping knowledge.</CardDescription>
+          <CardDescription>Join Xyvea to start mapping knowledge.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleSignUp)}>
             <CardContent className="grid gap-4">

@@ -29,7 +29,7 @@ export default function ContributePage() {
     <>
       <div className="container mx-auto max-w-7xl px-4 py-12">
         <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight">Contribute to CausalCanvas</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Contribute to Xyvea</h1>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
             Help grow the collective understanding by adding new concepts and the causal links between them.
           </p>

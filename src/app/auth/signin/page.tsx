@@ -63,7 +63,7 @@ export default function SignInPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl">Sign In</CardTitle>
-          <CardDescription>Welcome back to CausalCanvas.</CardDescription>
+          <CardDescription>Welcome back to Xyvea.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleSignIn)}>
             <CardContent className="grid gap-4">

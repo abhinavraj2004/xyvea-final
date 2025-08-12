@@ -136,7 +136,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="weekly-digest" className="font-medium">Weekly Digest</Label>
-                <p className="text-sm text-muted-foreground">Get a summary of trending topics on CausalCanvas.</p>
+                <p className="text-sm text-muted-foreground">Get a summary of trending topics on Xyvea.</p>
               </div>
               <Switch id="weekly-digest" />
             </div>
