@@ -55,7 +55,7 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
     <header className="sticky top-0 z-50 w-full">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left side for both Desktop and Mobile */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           {/* Desktop Sidebar Toggle */}
           {isLoggedIn && (
              <Button onClick={onToggleSidebar} variant="ghost" size="icon" className="hidden md:flex">
@@ -64,8 +64,8 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
             </Button>
           )}
 
-          {/* Mobile Menu Sheet */}
-          <div className="md:hidden">
+          {/* Mobile Menu Sheet & Logo */}
+          <div className="flex items-center gap-2 md:hidden">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -113,7 +113,7 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
           {/* Logo and App Name */}
           <Link href="/" className="flex items-center gap-2">
             <Logo />
-            <span className="text-xl font-bold hidden sm:inline-block">Xyvea</span>
+            <span className="text-xl font-bold">Xyvea</span>
           </Link>
         </div>
 
