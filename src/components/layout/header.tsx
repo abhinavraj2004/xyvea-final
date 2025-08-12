@@ -26,16 +26,12 @@ type HeaderProps = {
 };
 
 export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProps) {
-  const { isLoggedIn, toggleLogin, setLoggedIn } = useAuth();
+  const { isLoggedIn, toggleLogin, user, logout } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const handleContribute = () => {
-    if (isLoggedIn) {
-      router.push('/contribute');
-    } else {
-      toggleLogin();
-    }
+    router.push('/contribute');
     setIsSheetOpen(false);
   };
 
@@ -50,79 +46,75 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
   };
   
   const handleLogout = () => {
-    toggleLogin();
+    logout();
     setIsSheetOpen(false);
+    router.push('/');
   }
 
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Desktop Left */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* Left side for both Desktop and Mobile */}
+        <div className="flex items-center gap-4">
+          {/* Desktop Sidebar Toggle */}
           {isLoggedIn && (
-            <Button onClick={onToggleSidebar} variant="ghost" size="icon">
+             <Button onClick={onToggleSidebar} variant="ghost" size="icon" className="hidden md:flex">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle Sidebar</span>
             </Button>
           )}
+
+          {/* Mobile Menu Sheet */}
+          <div className="md:hidden">
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu />
+                  <span className="sr-only">Open Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full sm:w-[320px] p-0">
+                 <SheetHeader className="p-4 border-b">
+                   <SheetTitle>
+                    <div className="flex items-center gap-2">
+                      <Logo />
+                      <span className="text-xl font-bold">Xyvea</span>
+                    </div>
+                  </SheetTitle>
+                </SheetHeader>
+                 {isLoggedIn ? (
+                   <Sidebar isSheet={true} onLinkClick={() => setIsSheetOpen(false)} />
+                 ) : (
+                  <>
+                    <div className="flex flex-col h-full p-4">
+                      <div className="flex flex-col gap-4 flex-grow">
+                        <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
+                          Contribute
+                        </Button>
+                      </div>
+
+                      <div className="mt-auto border-t pt-4">
+                        <div className="flex flex-col gap-2">
+                          <Button variant="outline" className="w-full" onClick={handleSignIn}>
+                            Log In
+                          </Button>
+                          <Button className="w-full" onClick={handleSignUp}>
+                            Sign Up
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                 )}
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Logo and App Name */}
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <span className="text-xl font-bold hidden sm:inline-block">Xyvea</span>
           </Link>
-        </div>
-
-        {/* Mobile Left */}
-        <div className="md:hidden flex items-center">
-           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu />
-                <span className="sr-only">Open Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-[320px] p-0">
-               <SheetHeader className="p-4 border-b">
-                 <SheetTitle>
-                  <div className="flex items-center gap-2">
-                    <Logo />
-                    <span className="text-xl font-bold">Xyvea</span>
-                  </div>
-                </SheetTitle>
-              </SheetHeader>
-               {isLoggedIn ? (
-                 <Sidebar isSheet={true} onLinkClick={() => setIsSheetOpen(false)} />
-               ) : (
-                <>
-                  <div className="flex flex-col h-full p-4">
-                    <div className="flex flex-col gap-4 flex-grow">
-                      <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
-                        Contribute
-                      </Button>
-                    </div>
-
-                    <div className="mt-auto border-t pt-4">
-                      <div className="flex flex-col gap-2">
-                        <Button variant="outline" className="w-full" onClick={handleSignIn}>
-                          Log In
-                        </Button>
-                        <Button className="w-full" onClick={handleSignUp}>
-                          Sign Up
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </>
-               )}
-            </SheetContent>
-          </Sheet>
-        </div>
-        
-        {/* Mobile Center */}
-        <div className="md:hidden flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-                <Logo />
-                <span className="text-xl font-bold">Xyvea</span>
-            </Link>
         </div>
 
         {/* Right side for both Desktop and Mobile */}
@@ -132,21 +124,21 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
               Contribute
             </Button>
           )}
-          {isLoggedIn ? (
+          {isLoggedIn && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="profile avatar" />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarImage src={user.photoURL} alt={user.displayName} />
+                    <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">User</p>
-                    <p className="text-xs leading-none text-muted-foreground">user@example.com</p>
+                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -166,9 +158,10 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                 Log in
               </Button>
               <Button className='hidden md:inline-flex' onClick={handleSignUp}>Sign up</Button>
-               <Button variant="ghost" className="md:hidden" onClick={handleSignIn}>
+              <Button variant="ghost" className="md:hidden" onClick={handleSignIn}>
                 Log in
               </Button>
+               <Button size="sm" className="md:hidden" onClick={handleSignUp}>Sign up</Button>
             </div>
           )}
         </div>
