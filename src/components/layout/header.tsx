@@ -49,7 +49,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
@@ -113,8 +113,8 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-full sm:w-[320px] p-0">
-              <SheetHeader className="p-4 border-b">
-                <SheetTitle>
+               <SheetHeader className="p-4 border-b">
+                 <SheetTitle>
                   <div className="flex items-center gap-2">
                     <Logo />
                     <span className="text-xl font-bold">Xyvea</span>

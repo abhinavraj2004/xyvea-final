@@ -67,28 +67,30 @@ export default function Sidebar({ isSheet = false, onLinkClick }: SidebarProps) 
       <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="flex-1 flex flex-col px-2">
         <div className="px-2 mb-2">
           <CollapsibleTrigger asChild>
-            <button className="flex items-center justify-between w-full">
+            <button className="flex items-center justify-between w-full hover:bg-accent p-2 rounded-md">
               <h2 className="text-lg font-semibold tracking-tight">History</h2>
-              <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+              <ChevronsUpDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isHistoryOpen && "rotate-180")} />
             </button>
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent asChild>
-          <ScrollArea className="flex-1 px-2">
-            <div className="space-y-1">
-              {mockHistory.map((item) => (
-                <Button
-                  key={item}
-                  variant="ghost"
-                  className="w-full justify-start font-normal truncate"
-                  onClick={() => handleHistoryClick(item)}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  {item}
-                </Button>
-              ))}
-            </div>
-          </ScrollArea>
+          <div className="flex-1 flex flex-col min-h-0">
+            <ScrollArea className="flex-1 px-2">
+              <div className="space-y-1">
+                {mockHistory.map((item) => (
+                  <Button
+                    key={item}
+                    variant="ghost"
+                    className="w-full justify-start font-normal truncate"
+                    onClick={() => handleHistoryClick(item)}
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    {item}
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         </CollapsibleContent>
       </Collapsible>
       
