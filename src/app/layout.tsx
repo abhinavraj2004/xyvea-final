@@ -7,7 +7,7 @@ import AppLayout from '@/components/layout/app-layout';
 
 
 export const metadata: Metadata = {
-  title: 'Xyvea',
+  title: 'CausalCanvas',
   description:
     'A visual, interactive, crowd-sourced knowledge graph that maps cause-and-effect between concepts, events, and ideas to help users understand why things happen.',
 };

@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -16,6 +18,7 @@ const GoogleIcon = () => (
 
 export default function SignUpPage() {
   const { setLoggedIn } = useAuth();
+  const router = useRouter();
 
   const handleSignUp = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -24,14 +27,22 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
+    <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
+       <Button
+        variant="ghost"
+        className="absolute top-8 left-8"
+        onClick={() => router.back()}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <Logo />
           </div>
           <CardTitle className="text-2xl">Create an Account</CardTitle>
-          <CardDescription>Join Xyvea to start mapping knowledge.</CardDescription>
+          <CardDescription>Join CausalCanvas to start mapping knowledge.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
         <Button variant="outline" className="w-full" onClick={handleSignUp}>
