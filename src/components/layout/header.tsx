@@ -83,8 +83,8 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                    <Sidebar isSheet={true} onLinkClick={() => setIsSheetOpen(false)} />
                  ) : (
                   <>
-                    <div className="flex flex-col h-full p-4">
-                      <div className="flex flex-col gap-4 flex-grow">
+                    <div className="flex flex-col p-4">
+                      <div className="flex flex-col gap-4">
                           <Button variant="ghost" className="justify-start text-lg" onClick={() => handleNavigate('/contribute')}>
                             Contribute
                           </Button>
@@ -93,7 +93,7 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                           </Button>
                       </div>
 
-                      <div className="mt-auto border-t pt-4">
+                      <div className="border-t pt-4 mt-4">
                         <Button className="w-full" onClick={() => handleNavigate('/auth/signup')}>Sign Up</Button>
                         <div className="mt-4 text-center text-sm">
                           Already have an account?{' '}
