@@ -45,11 +45,11 @@ const generateMockData = (conceptId: string) => {
   return { causes, effects };
 };
 
-const statusStyles: Record<string, { bg: string; text: string }> = {
-  verified: { bg: 'bg-green-500/20', text: 'text-green-300' },
-  disputed: { bg: 'bg-yellow-500/20', text: 'text-yellow-300' },
-  pending: { bg: 'bg-gray-500/20', text: 'text-gray-300' },
-  rejected: { bg: 'bg-red-500/20', text: 'text-red-300' },
+const statusStyles: Record<string, string> = {
+  verified: 'bg-green-500 text-green-950',
+  disputed: 'bg-yellow-500 text-yellow-950',
+  pending: 'bg-gray-500 text-white',
+  rejected: 'bg-red-500 text-white',
 };
 
 type ConceptCardProps = {
@@ -85,7 +85,7 @@ const ConceptCard = ({ item, isSelected, onSelect, onNavigate }: ConceptCardProp
       </a>
 
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/50">
-        <Badge className={cn('text-xs font-medium px-2 py-1 border-transparent', statusStyle.bg, statusStyle.text)}>
+        <Badge className={cn('text-xs font-medium px-2 py-1 border-transparent hover:bg-none', statusStyle)}>
           {item.status}
         </Badge>
         <div className="flex items-center gap-4 text-sm">
