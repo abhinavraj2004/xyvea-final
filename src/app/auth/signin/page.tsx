@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useToast } from '@/hooks/use-toast';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -22,13 +23,28 @@ export default function SignInPage() {
   const { loginWithEmail, loginWithGoogle } = useAuth();
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const { toast } = useToast();
 
   const handleSignIn = async (data: any) => {
-    await loginWithEmail(data.email, data.password);
+    const error = await loginWithEmail(data.email, data.password);
+    if (error) {
+      toast({
+        title: 'Sign In Failed',
+        description: error,
+        variant: 'destructive',
+      });
+    }
   };
   
   const handleGoogleSignIn = async () => {
-    await loginWithGoogle();
+    const error = await loginWithGoogle();
+     if (error) {
+      toast({
+        title: 'Google Sign In Failed',
+        description: error,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -47,7 +63,7 @@ export default function SignInPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl">Sign In</CardTitle>
-          <CardDescription>Welcome back to Xyvea.</CardDescription>
+          <CardDescription>Welcome back to CausalCanvas.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleSignIn)}>
             <CardContent className="grid gap-4">

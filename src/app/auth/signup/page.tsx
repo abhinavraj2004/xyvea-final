@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useToast } from '@/hooks/use-toast';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -22,13 +23,28 @@ export default function SignUpPage() {
   const { signupWithEmail, loginWithGoogle } = useAuth();
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const { toast } = useToast();
 
   const handleSignUp = async (data: any) => {
-    await signupWithEmail(data.email, data.password, data.displayName);
+    const error = await signupWithEmail(data.email, data.password, data.displayName);
+     if (error) {
+      toast({
+        title: 'Sign Up Failed',
+        description: error,
+        variant: 'destructive',
+      });
+    }
   };
   
   const handleGoogleSignIn = async () => {
-    await loginWithGoogle();
+    const error = await loginWithGoogle();
+     if (error) {
+      toast({
+        title: 'Google Sign In Failed',
+        description: error,
+        variant: 'destructive',
+      });
+    }
   };
 
 
@@ -48,7 +64,7 @@ export default function SignUpPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl">Create an Account</CardTitle>
-          <CardDescription>Join Xyvea to start mapping knowledge.</CardDescription>
+          <CardDescription>Join CausalCanvas to start mapping knowledge.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleSignUp)}>
             <CardContent className="grid gap-4">
