@@ -28,7 +28,7 @@ const generateMockData = (conceptId: string) => {
       const title = `${prefix} ${baseTitle}`;
       const titleHash = hashCode(title + i);
       return {
-        id: `${(prefix[0] || 'r').toLowerCase()}${i}`,
+        id: `${(prefix?.[0] || 'r').toLowerCase()}${i}`,
         title,
         status: statuses[(seed + i * offset) % statuses.length],
         upvotes: Math.abs(titleHash) % 200,
@@ -46,10 +46,10 @@ const generateMockData = (conceptId: string) => {
 };
 
 const statusStyles: Record<string, { bg: string; text: string }> = {
-  verified: { bg: 'bg-green-200 text-green-900', text: 'text-green-900' },
-  disputed: { bg: 'bg-yellow-200 text-yellow-900', text: 'text-yellow-900' },
-  pending: { bg: 'bg-gray-300 text-gray-900', text: 'text-gray-900' },
-  rejected: { bg: 'bg-red-200 text-red-900', text: 'text-red-900' },
+  verified: { bg: 'bg-green-500/20', text: 'text-green-300' },
+  disputed: { bg: 'bg-yellow-500/20', text: 'text-yellow-300' },
+  pending: { bg: 'bg-gray-500/20', text: 'text-gray-300' },
+  rejected: { bg: 'bg-red-500/20', text: 'text-red-300' },
 };
 
 type ConceptCardProps = {
@@ -65,7 +65,7 @@ const ConceptCard = ({ item, isSelected, onSelect, onNavigate }: ConceptCardProp
   return (
     <div
       className={cn(
-        "border rounded-lg p-4 flex flex-col h-full cursor-pointer transition-all",
+        "border rounded-lg p-4 flex flex-col h-full cursor-pointer transition-all bg-card/50",
         isSelected ? "border-primary shadow-lg scale-[1.02]" : "hover:border-primary/50 hover:shadow-md"
       )}
       onClick={onSelect}
@@ -85,7 +85,7 @@ const ConceptCard = ({ item, isSelected, onSelect, onNavigate }: ConceptCardProp
       </a>
 
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/50">
-        <Badge className={cn('text-xs font-medium px-2 py-1', statusStyle.bg, statusStyle.text)}>
+        <Badge className={cn('text-xs font-medium px-2 py-1 border-transparent', statusStyle.bg, statusStyle.text)}>
           {item.status}
         </Badge>
         <div className="flex items-center gap-4 text-sm">
@@ -162,7 +162,7 @@ export default function TablePage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="cursor-pointer" onClick={handleProposeLinkClick}>
+                    <div className="cursor-pointer" onClick={(e) => { if (isProposeDisabled) e.preventDefault(); else handleProposeLinkClick(); }}>
                        <ProposeLinkButton />
                     </div>
                   </TooltipTrigger>
@@ -218,7 +218,6 @@ export default function TablePage() {
         isOpen={isLinkModalOpen}
         onOpenChange={setIsLinkModalOpen}
         baseConceptName={conceptName}
-        // Prefill with selected concepts if needed, for now just opening
       />
     </>
   );
