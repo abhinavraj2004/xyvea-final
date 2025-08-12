@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -51,7 +52,7 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/0 backdrop-blur-sm">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           {user && (
@@ -93,13 +94,12 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                       </div>
 
                       <div className="mt-auto border-t pt-4">
-                        <div className="flex flex-col gap-2">
-                            <Button variant="outline" className="w-full" onClick={() => handleNavigate('/auth/signin')}>
-                                Log In
-                            </Button>
-                            <Button className="w-full" onClick={() => handleNavigate('/auth/signup')}>
-                                Sign Up
-                            </Button>
+                        <Button className="w-full" onClick={() => handleNavigate('/auth/signup')}>Sign Up</Button>
+                        <div className="mt-4 text-center text-sm">
+                          Already have an account?{' '}
+                          <button onClick={() => handleNavigate('/auth/signin')} className="underline text-primary">
+                            Log In
+                          </button>
                         </div>
                       </div>
                     </div>
