@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -17,7 +15,7 @@ import {
 } from 'd3-force';
 import { select, drag, zoom, type D3DragEvent, type ZoomTransform } from 'd3';
 import { cn } from '@/lib/utils';
-import { CausalLink, getLinksForConcept, getConceptByTitle } from '@/lib/firestore';
+import { CausalLink, getLinksForConcept, getConceptByTitle } from '@/lib/neo4j'; // Updated import
 import { Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from '@/hooks/use-auth';

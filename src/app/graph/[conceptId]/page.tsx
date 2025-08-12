@@ -10,7 +10,7 @@ import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 import AddConceptModal from '@/components/contribute/add-concept-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { getConceptByTitle } from '@/lib/firestore';
+import { getConceptByTitle } from '@/lib/neo4j'; // Updated import
 
 export default function GraphPage() {
   const router = useRouter();

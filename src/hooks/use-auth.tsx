@@ -2,12 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { createUserProfileDocument, getUserProfile } from '@/lib/firestore';
 import type { User } from '@/types';
 import { Loader2 } from 'lucide-react';
-
-// This is a mock authentication hook.
-// It simulates user login state without a real backend.
-// Replace this with your actual authentication logic (e.g., using Neo4j, Passport.js, etc.)
+import { useToast } from './use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -21,68 +21,107 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data
-const mockUser: User = {
-  uid: 'mock-user-123',
-  displayName: 'Alex Researcher',
-  email: 'alex.r@example.com',
-  photoURL: 'https://placehold.co/100x100.png',
-  reputation: 42,
-  subscriptionTier: 'pro',
-  searchHistory: [
-    { id: '1', searchTerm: 'Climate Change', timestamp: new Date() },
-    { id: '2', searchTerm: 'Economic Inflation', timestamp: new Date() },
-  ],
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate checking for a logged-in user
-    // In a real app, you might check a token in localStorage
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (isLoggedIn) {
-      setUser(mockUser);
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (userAuth) => {
+      if (userAuth) {
+        const userProfile = await getUserProfile(userAuth.uid);
+        setUser(userProfile);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = () => {
-    setLoading(true);
-    // Simulate a successful login
-    localStorage.setItem('isLoggedIn', 'true');
-    setUser(mockUser);
-    setLoading(false);
-    router.push('/');
-    return Promise.resolve(undefined);
-  }
-
   const loginWithGoogle = async () => {
-    console.log("Simulating Google Login...");
-    return login();
+    try {
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      const { user: firebaseUser } = await signInWithPopup(auth, provider);
+      await createUserProfileDocument(firebaseUser, {});
+      router.push('/');
+      return undefined;
+    } catch (error: any) {
+      console.error("Google Sign In Error:", error);
+      const errorMessage = error.message || 'An unexpected error occurred.';
+      toast({
+        title: 'Google Sign In Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      return errorMessage;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signupWithEmail = async (email: string, password: string, displayName: string) => {
-     console.log("Simulating Email Signup for:", email, displayName);
-     return login();
+    try {
+      setLoading(true);
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(firebaseUser, { displayName });
+      await createUserProfileDocument(firebaseUser, { displayName });
+      router.push('/');
+      return undefined;
+    } catch (error: any) {
+      console.error("Email Signup Error:", error);
+      const errorMessage = error.message || 'An unexpected error occurred.';
+      toast({
+        title: 'Sign Up Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      return errorMessage;
+    } finally {
+      setLoading(false);
+    }
   };
   
   const loginWithEmail = async (email: string, password: string) => {
-    console.log("Simulating Email Login for:", email);
-    return login();
+    try {
+      setLoading(true);
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/');
+      return undefined;
+    } catch (error: any) {
+      console.error("Email Login Error:", error);
+      const errorMessage = error.message || 'An unexpected error occurred.';
+      toast({
+        title: 'Sign In Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      return errorMessage;
+    } finally {
+      setLoading(false);
+    }
   }
 
   const logout = async () => {
-    setLoading(true);
-    localStorage.removeItem('isLoggedIn');
-    setUser(null);
-    setLoading(false);
-    router.push('/');
+    try {
+      setLoading(true);
+      await signOut(auth);
+      router.push('/');
+    } catch(error: any) {
+       console.error("Logout Error:", error);
+       toast({
+        title: 'Logout Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+        setLoading(false);
+    }
   };
-
+  
   if (loading) {
     return (
         <div className="flex h-screen items-center justify-center">

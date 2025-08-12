@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { addConcept } from '@/lib/firestore';
+import { addConcept } from '@/lib/neo4j'; // Updated import
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 

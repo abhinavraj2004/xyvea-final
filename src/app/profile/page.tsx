@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { List, GitFork, CheckCircle, Pencil, Star, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from '@/hooks/use-auth';
-import { getUserContributions, Contribution, ContributionStats } from '@/lib/firestore';
+import { getUserContributions, Contribution, ContributionStats } from '@/lib/firestore'; // Updated import for user data
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
@@ -20,6 +20,7 @@ export default function ProfilePage() {
     if (user) {
       const fetchContributions = async () => {
         setLoading(true);
+        // This function now specifically fetches user-related metadata from Firestore
         const { contributions: userContributions, stats: userStats } = await getUserContributions(user.uid);
         setContributions(userContributions);
         setStats(userStats);

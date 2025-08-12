@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { CausalLink, getLinksForConcept, voteOnLink } from '@/lib/firestore';
+import { CausalLink, getLinksForConcept, voteOnLink } from '@/lib/neo4j'; // Updated import
 
 const statusStyles: Record<string, string> = {
   verified: 'bg-green-100 border-green-300 text-green-800 dark:bg-green-500/20 dark:border-green-500 dark:text-green-300',

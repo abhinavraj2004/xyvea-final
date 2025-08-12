@@ -1,63 +1,66 @@
-// This file is a placeholder for your database logic.
-// You can replace these functions with your Neo4j data fetching logic.
+// This file handles all user-related data interactions with Cloud Firestore.
 
-import type { User, Contribution, ContributionStats, CausalLink, Concept } from '@/types';
-
-// Mock Data
-const mockConcepts: Concept[] = [
-  { id: '1', title: 'climate change', description: 'A long-term change in the average weather patterns that have come to define Earth\'s local, regional and global climates.', authorId: '1', createdAt: new Date() },
-  { id: '2', title: 'greenhouse gas emissions', description: 'Gases in Earth\'s atmosphere that trap heat.', authorId: '1', createdAt: new Date() },
-  { id: '3', title: 'global warming', description: 'The long-term heating of Earth\'s climate system observed since the pre-industrial period.', authorId: '1', createdAt: new Date() },
-];
-
-const mockLinks: CausalLink[] = [
-  { id: '1', cause: 'greenhouse gas emissions', effect: 'global warming', description: 'Increased greenhouse gases from human activities are the primary driver of global warming.', sourceURL: 'https://www.nasa.gov/climatechange/what-is-climate-change/', authorId: '1', status: 'verified', upvotes: 150, downvotes: 10, createdAt: new Date() },
-  { id: '2', cause: 'global warming', effect: 'climate change', description: 'Global warming is a major aspect of climate change, contributing to wider-ranging changes in weather patterns.', sourceURL: 'https://www.nrdc.org/stories/global-warming-101', authorId: '1', status: 'verified', upvotes: 120, downvotes: 5, createdAt: new Date() },
-];
+import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { db } from './firebase';
+import type { User, Contribution, ContributionStats } from '@/types';
 
 
-// Concepts
-export const addConcept = async (concept: Omit<Concept, 'id' | 'createdAt'>): Promise<void> => {
-  console.log('Attempting to add concept:', concept);
-  // Replace with your Neo4j logic, e.g.,
-  // const session = driver.session();
-  // await session.run('CREATE (c:Concept { ... })', { ...concept });
-  // await session.close();
+// User Management
+export const createUserProfileDocument = async (userAuth: { uid: string; email?: string | null; displayName?: string | null; photoURL?: string | null }, additionalData: any) => {
+  const userRef = doc(db, `users/${userAuth.uid}`);
+  const snapshot = await getDoc(userRef);
+
+  if (!snapshot.exists()) {
+    const { displayName, email, photoURL } = userAuth;
+    const createdAt = serverTimestamp();
+    try {
+      await setDoc(userRef, {
+        displayName,
+        email,
+        photoURL,
+        createdAt,
+        reputation: 0,
+        subscriptionTier: 'free',
+        ...additionalData,
+      });
+    } catch (error) {
+      console.error('Error creating user profile', error);
+    }
+  }
+  return userRef;
 };
 
-export const getConceptByTitle = async (title: string): Promise<Concept | null> => {
-  console.log('Fetching concept by title:', title);
-  const concept = mockConcepts.find(c => c.title.toLowerCase() === title.toLowerCase());
-  return Promise.resolve(concept || null);
+export const getUserProfile = async (userId: string): Promise<User | null> => {
+  const userRef = doc(db, `users/${userId}`);
+  const docSnap = await getDoc(userRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    return {
+      uid: docSnap.id,
+      displayName: data.displayName,
+      email: data.email,
+      photoURL: data.photoURL,
+      reputation: data.reputation || 0,
+      subscriptionTier: data.subscriptionTier || 'free',
+      // The search history will now be managed by the Neo4j service.
+      // We will return an empty array here for now.
+      searchHistory: [], 
+    } as User;
+  } else {
+    return null;
+  }
 };
 
 
-// Causal Links
-export const addCausalLink = async (link: Omit<CausalLink, 'id' | 'createdAt' | 'upvotes' | 'downvotes' | 'status'>): Promise<void> => {
-  console.log('Attempting to add causal link:', link);
-  // Replace with your Neo4j logic
-};
-
-export const getLinksForConcept = async (conceptTitle: string): Promise<{ causes: CausalLink[], effects: CausalLink[] }> => {
-  console.log('Fetching links for concept:', conceptTitle);
-  const lowercasedTitle = conceptTitle.toLowerCase();
-  
-  const causes = mockLinks.filter(link => link.effect.toLowerCase() === lowercasedTitle);
-  const effects = mockLinks.filter(link => link.cause.toLowerCase() === lowercasedTitle);
-  
-  return Promise.resolve({ causes, effects });
-}
-
-export const voteOnLink = async (linkId: string, userId: string, voteType: 'up' | 'down'): Promise<void> => {
-  console.log(`User ${userId} attempting to ${voteType}vote on link ${linkId}`);
-  // Replace with your Neo4j logic to handle voting
-};
-
-
-// User Data
+// User Contributions (as metadata, actual graph data is in Neo4j)
 export const getUserContributions = async (userId: string): Promise<{ contributions: Contribution[], stats: ContributionStats }> => {
-  console.log('Fetching contributions for user:', userId);
+  console.log('Fetching user contribution metadata from Firestore for user:', userId);
+
+  // In a real application, you might store contribution metadata in Firestore
+  // for quick lookups on the profile page, while the actual graph data lives in Neo4j.
   
+  // For now, returning mock data as before.
   const contributions: Contribution[] = [
     { id: '1', type: 'link', description: 'Proposed link: Greenhouse Gas Emissions -> Global Warming', createdAt: new Date(Date.now() - 86400000) },
     { id: '2', type: 'concept', description: 'Added concept: Climate Change', createdAt: new Date(Date.now() - 172800000) },
@@ -69,4 +72,4 @@ export const getUserContributions = async (userId: string): Promise<{ contributi
   };
 
   return Promise.resolve({ contributions, stats });
-}
+};

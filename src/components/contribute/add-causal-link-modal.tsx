@@ -30,7 +30,7 @@ import { Loader2, Wand2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { addCausalLink } from '@/lib/firestore';
+import { addCausalLink } from '@/lib/neo4j'; // Updated import
 
 const formSchema = z.object({
   relationship: z.enum(['cause', 'effect'], {
