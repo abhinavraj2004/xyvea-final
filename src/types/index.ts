@@ -26,7 +26,7 @@ export type Concept = {
 };
 
 export type CausalLink = {
-  id: string;
+  id:string;
   cause: string;
   effect: string;
   description: string;
@@ -37,6 +37,7 @@ export type CausalLink = {
   downvotes: number;
   createdAt: Timestamp;
 };
+
 
 export type Contribution = {
   id: string;

@@ -26,22 +26,12 @@ type HeaderProps = {
 };
 
 export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProps) {
-  const { isLoggedIn, toggleLogin, user, logout } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const handleContribute = () => {
-    router.push('/contribute');
-    setIsSheetOpen(false);
-  };
-
-  const handleSignIn = () => {
-    router.push('/auth/signin');
-    setIsSheetOpen(false);
-  };
-
-  const handleSignUp = () => {
-    router.push('/auth/signup');
+  const handleNavigate = (path: string) => {
+    router.push(path);
     setIsSheetOpen(false);
   };
   
@@ -51,20 +41,26 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
     router.push('/');
   }
 
+  const LoggedOutButtons = () => (
+    <div className='flex items-center gap-2'>
+        <Button variant="ghost" onClick={() => handleNavigate('/auth/signin')}>
+            Log in
+        </Button>
+        <Button onClick={() => handleNavigate('/auth/signup')}>Sign up</Button>
+    </div>
+  );
+
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Left side for both Desktop and Mobile */}
         <div className="flex items-center gap-2">
-          {/* Desktop Sidebar Toggle */}
-          {isLoggedIn && (
+          {user && (
              <Button onClick={onToggleSidebar} variant="ghost" size="icon" className="hidden md:flex">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle Sidebar</span>
             </Button>
           )}
 
-          {/* Mobile Menu Sheet & Logo */}
           <div className="flex items-center gap-2 md:hidden">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
@@ -82,25 +78,28 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                     </div>
                   </SheetTitle>
                 </SheetHeader>
-                 {isLoggedIn ? (
+                 {user ? (
                    <Sidebar isSheet={true} onLinkClick={() => setIsSheetOpen(false)} />
                  ) : (
                   <>
                     <div className="flex flex-col h-full p-4">
                       <div className="flex flex-col gap-4 flex-grow">
-                        <Button variant="ghost" className="justify-start text-lg" onClick={handleContribute}>
-                          Contribute
-                        </Button>
+                          <Button variant="ghost" className="justify-start text-lg" onClick={() => handleNavigate('/contribute')}>
+                            Contribute
+                          </Button>
+                          <Button variant="ghost" className="justify-start text-lg" onClick={() => handleNavigate('/gopro')}>
+                            Go Pro
+                          </Button>
                       </div>
 
                       <div className="mt-auto border-t pt-4">
                         <div className="flex flex-col gap-2">
-                          <Button variant="outline" className="w-full" onClick={handleSignIn}>
-                            Log In
-                          </Button>
-                          <Button className="w-full" onClick={handleSignUp}>
-                            Sign Up
-                          </Button>
+                            <Button variant="outline" className="w-full" onClick={() => handleNavigate('/auth/signin')}>
+                                Log In
+                            </Button>
+                            <Button className="w-full" onClick={() => handleNavigate('/auth/signup')}>
+                                Sign Up
+                            </Button>
                         </div>
                       </div>
                     </div>
@@ -110,21 +109,23 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
             </Sheet>
           </div>
 
-          {/* Logo and App Name */}
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <span className="text-xl font-bold">Xyvea</span>
           </Link>
         </div>
 
-        {/* Right side for both Desktop and Mobile */}
         <div className="flex items-center gap-2">
-          {!isLoggedIn && (
-            <Button variant="ghost" className="hidden md:inline-flex" onClick={handleContribute}>
-              Contribute
-            </Button>
-          )}
-          {isLoggedIn && user ? (
+           <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" onClick={() => handleNavigate('/contribute')}>
+                    Contribute
+                </Button>
+                <Button variant="ghost" onClick={() => handleNavigate('/gopro')}>
+                    Go Pro
+                </Button>
+           </div>
+
+          {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -153,16 +154,9 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className='flex items-center gap-2'>
-              <Button variant="ghost" className='hidden md:inline-flex' onClick={handleSignIn}>
-                Log in
-              </Button>
-              <Button className='hidden md:inline-flex' onClick={handleSignUp}>Sign up</Button>
-              <Button variant="ghost" className="md:hidden" onClick={handleSignIn}>
-                Log in
-              </Button>
-               <Button size="sm" className="md:hidden" onClick={handleSignUp}>Sign up</Button>
-            </div>
+             <div className="hidden md:flex">
+                <LoggedOutButtons />
+             </div>
           )}
         </div>
       </div>

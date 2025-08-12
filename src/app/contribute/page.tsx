@@ -7,11 +7,23 @@ import AddConceptModal from '@/components/contribute/add-concept-modal';
 import AddCausalLinkModal from '@/components/contribute/add-causal-link-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
 
 export default function ContributePage() {
   const [isConceptModalOpen, setIsConceptModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  const { isLoggedIn, toggleLogin } = useAuth();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleOpenConceptModal = () => {
+    if (!user) router.push('/auth/signin');
+    else setIsConceptModalOpen(true);
+  }
+
+  const handleOpenLinkModal = () => {
+     if (!user) router.push('/auth/signin');
+     else setIsLinkModalOpen(true);
+  }
 
   return (
     <>
@@ -23,11 +35,11 @@ export default function ContributePage() {
           </p>
         </div>
 
-        {!isLoggedIn && (
+        {!user && (
            <Card className="mt-8 max-w-4xl mx-auto bg-card/50">
             <CardContent className="p-6 text-center">
               <p className="text-muted-foreground mb-4">You must be logged in to contribute.</p>
-              <Button onClick={toggleLogin}>Login or Sign Up</Button>
+              <Button onClick={() => router.push('/auth/signin')}>Login or Sign Up</Button>
             </CardContent>
           </Card>
         )}
@@ -41,7 +53,7 @@ export default function ContributePage() {
             <p className="mt-2 text-muted-foreground">
               Introduce a new idea, event, or entity to the knowledge graph.
             </p>
-            <Button className="mt-6" onClick={() => setIsConceptModalOpen(true)} disabled={!isLoggedIn}>
+            <Button className="mt-6" onClick={handleOpenConceptModal} disabled={!user}>
               Add Concept
             </Button>
           </div>
@@ -54,7 +66,7 @@ export default function ContributePage() {
             <p className="mt-2 text-muted-foreground">
               Connect two existing concepts with a sourced cause-and-effect relationship.
             </p>
-            <Button className="mt-6" onClick={() => setIsLinkModalOpen(true)} disabled={!isLoggedIn}>
+            <Button className="mt-6" onClick={handleOpenLinkModal} disabled={!user}>
               Propose Link
             </Button>
           </div>

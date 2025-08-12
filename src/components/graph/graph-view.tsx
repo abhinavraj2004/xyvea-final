@@ -21,6 +21,7 @@ import { CausalLink, getLinksForConcept, getConceptByTitle } from '@/lib/firesto
 import { Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import Link from 'next/link';
 
 
 // Data types
@@ -132,7 +133,7 @@ const transformDataForGraph = (causes: CausalLink[], effects: CausalLink[], cent
 // Main Graph Component
 const GraphView = ({ centralConceptId, onContributeClick }: { centralConceptId: string; onContributeClick: () => void; }) => {
   const router = useRouter();
-  const { isLoggedIn, toggleLogin } = useAuth();
+  const { user } = useAuth();
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const [simulation, setSimulation] = useState<Simulation<D3Node, D3Link>>();
@@ -217,10 +218,10 @@ const GraphView = ({ centralConceptId, onContributeClick }: { centralConceptId: 
   };
 
   const handleContribute = () => {
-    if (isLoggedIn) {
-      onContributeClick();
+    if (!user) {
+      router.push('/auth/signin');
     } else {
-      toggleLogin();
+      onContributeClick();
     }
   }
 
@@ -281,12 +282,10 @@ const GraphView = ({ centralConceptId, onContributeClick }: { centralConceptId: 
             <div className="w-full h-full flex flex-col justify-center items-center text-center p-4">
                 <p className="text-muted-foreground text-xl capitalize">No links for '{conceptName}' yet.</p>
                 <p className="text-muted-foreground mt-2 max-w-md">Be the first to propose a causal link for this concept and help grow the knowledge graph.</p>
-                <Link href="/contribute">
-                    <Button className="mt-6">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Propose a Link
-                    </Button>
-                </Link>
+                <Button className="mt-6" onClick={handleContribute}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Propose a Link
+                </Button>
             </div>
         )}
     </div>

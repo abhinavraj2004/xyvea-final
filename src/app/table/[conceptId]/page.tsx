@@ -105,7 +105,7 @@ const ConceptCard = ({ item, type, isSelected, onSelect, onNavigate, onVote }: C
 export default function TablePage() {
   const router = useRouter();
   const params = useParams();
-  const { user, isLoggedIn, toggleLogin } = useAuth();
+  const { user } = useAuth();
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
   const { toast } = useToast();
@@ -148,10 +148,10 @@ export default function TablePage() {
   };
 
   const handleProposeLinkClick = () => {
-    if (isLoggedIn) {
-      setIsLinkModalOpen(true);
+    if (!user) {
+      router.push('/auth/signin');
     } else {
-      toggleLogin();
+      setIsLinkModalOpen(true);
     }
   };
   
@@ -187,7 +187,7 @@ export default function TablePage() {
   const isProposeDisabled = !selectedCause || !selectedEffect;
   
   const ProposeLinkButton = () => (
-    <Button onClick={handleProposeLinkClick} disabled={isProposeDisabled || !isLoggedIn}>
+    <Button onClick={handleProposeLinkClick} disabled={isProposeDisabled || !user}>
       <PlusCircle className="mr-2 h-4 w-4" />
       Propose Link
     </Button>
@@ -210,7 +210,7 @@ export default function TablePage() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                   {!isLoggedIn ? (
+                   {!user ? (
                      <p>You must be logged in to propose a link.</p>
                    ) : isProposeDisabled ? (
                      <p>Select a cause and an effect to propose a link.</p>

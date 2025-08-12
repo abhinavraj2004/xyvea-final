@@ -30,6 +30,7 @@ import { Loader2, Wand2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { addCausalLink } from '@/lib/firestore';
 
 const formSchema = z.object({
   relationship: z.enum(['cause', 'effect'], {
@@ -44,6 +45,9 @@ type AddCausalLinkModalProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   baseConceptName?: string;
+  onLinkAdded?: () => void;
+  causeConcept?: string;
+  effectConcept?: string;
 };
 
 type VerificationResult = {
@@ -52,15 +56,16 @@ type VerificationResult = {
   error?: string;
 };
 
-export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptName }: AddCausalLinkModalProps) {
+export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptName, onLinkAdded, causeConcept, effectConcept }: AddCausalLinkModalProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const { toast } = useToast();
-  const { isLoggedIn } = useAuth();
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      relationship: 'cause',
       relatedConceptName: '',
       description: '',
       sourceURL: '',
@@ -71,8 +76,12 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
     if (isOpen) {
       form.reset();
       setVerificationResult(null);
+      if(causeConcept && effectConcept) {
+        form.setValue('relationship', 'cause');
+        form.setValue('relatedConceptName', causeConcept);
+      }
     }
-  }, [isOpen, form]);
+  }, [isOpen, form, causeConcept, effectConcept]);
 
   const handleVerify = async () => {
     const { sourceURL, relatedConceptName, relationship } = form.getValues();
@@ -93,24 +102,34 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!baseConceptName || !isLoggedIn) return;
+    if (!baseConceptName || !user) return;
 
     const cause = values.relationship === 'cause' ? values.relatedConceptName : baseConceptName;
     const effect = values.relationship === 'effect' ? values.relatedConceptName : baseConceptName;
 
-    const submissionData = {
-      cause,
-      effect,
-      description: values.description,
-      sourceURL: values.sourceURL,
-    };
-    
-    console.log(submissionData);
-    toast({
-      title: 'Contribution Submitted',
-      description: 'Your causal link has been submitted for review. Thank you!',
-    });
-    onOpenChange(false);
+    try {
+      await addCausalLink({
+        cause: cause.toLowerCase(),
+        effect: effect.toLowerCase(),
+        description: values.description,
+        sourceURL: values.sourceURL,
+        authorId: user.uid,
+      });
+
+      toast({
+        title: 'Contribution Submitted',
+        description: 'Your causal link has been submitted for review. Thank you!',
+      });
+      onLinkAdded?.();
+      onOpenChange(false);
+    } catch(error) {
+      console.error(error);
+      toast({
+        title: 'Submission Error',
+        description: 'There was an error submitting your link. Please try again.',
+        variant: 'destructive',
+      })
+    }
   }
 
   return (
@@ -127,50 +146,54 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="relationship"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>The related concept is a...</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex items-center space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="cause" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Cause</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="effect" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Effect</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!causeConcept && !effectConcept && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="relationship"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>The related concept is a...</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex items-center space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="cause" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Cause</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="effect" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Effect</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="relatedConceptName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Related Concept Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Global Warming" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="relatedConceptName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Related Concept Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Global Warming" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
             
             <FormField
               control={form.control}
@@ -201,7 +224,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
             />
             
             <div>
-              <Button type="button" variant="secondary" onClick={handleVerify} disabled={isVerifying || !baseConceptName || !isLoggedIn}>
+              <Button type="button" variant="secondary" onClick={handleVerify} disabled={isVerifying || !baseConceptName || !user}>
                 {isVerifying ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -231,7 +254,7 @@ export default function AddCausalLinkModal({ isOpen, onOpenChange, baseConceptNa
 
             <div className="flex justify-end gap-2 pt-4">
                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-               <Button type="submit" disabled={!baseConceptName || !isLoggedIn}>Submit Link</Button>
+               <Button type="submit" disabled={!baseConceptName || !user}>Submit Link</Button>
             </div>
           </form>
         </Form>

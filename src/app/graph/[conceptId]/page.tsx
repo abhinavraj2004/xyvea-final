@@ -16,7 +16,7 @@ import { getConceptByTitle } from '@/lib/firestore';
 export default function GraphPage() {
   const router = useRouter();
   const params = useParams();
-  const { isLoggedIn, toggleLogin } = useAuth();
+  const { user } = useAuth();
   const conceptId = Array.isArray(params.conceptId) ? params.conceptId[0] : params.conceptId;
   const conceptName = decodeURIComponent(conceptId).replace(/-/g, ' ');
 
@@ -38,18 +38,18 @@ export default function GraphPage() {
   };
   
   const handleProposeLinkClick = () => {
-    if (isLoggedIn) {
-      setIsLinkModalOpen(true);
+    if (!user) {
+      router.push('/auth/signin');
     } else {
-      toggleLogin();
+      setIsLinkModalOpen(true);
     }
   };
 
   const handleContributeClick = () => {
-     if (isLoggedIn) {
-      setIsConceptModalOpen(true);
+     if (!user) {
+      router.push('/auth/signin');
     } else {
-      toggleLogin();
+      setIsConceptModalOpen(true);
     }
   }
 
@@ -103,7 +103,7 @@ export default function GraphPage() {
             Exploring: <span className="text-primary">{conceptName}</span>
           </h1>
           <div className="flex items-center gap-2">
-            {!isLoggedIn ? (
+            {!user ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

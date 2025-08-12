@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -17,13 +19,16 @@ const GoogleIcon = () => (
 );
 
 export default function SignInPage() {
-  const { setLoggedIn } = useAuth();
+  const { loginWithEmail, loginWithGoogle } = useAuth();
   const router = useRouter();
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const handleSignIn = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    // In a real app, you would perform authentication here
-    setLoggedIn();
+  const handleSignIn = async (data: any) => {
+    await loginWithEmail(data.email, data.password);
+  };
+  
+  const handleGoogleSignIn = async () => {
+    await loginWithGoogle();
   };
 
   return (
@@ -44,37 +49,41 @@ export default function SignInPage() {
           <CardTitle className="text-2xl">Sign In</CardTitle>
           <CardDescription>Welcome back to Xyvea.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <Button variant="outline" className="w-full" onClick={handleSignIn}>
-            <GoogleIcon />
-            Sign in with Google
-          </Button>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+        <form onSubmit={handleSubmit(handleSignIn)}>
+            <CardContent className="grid gap-4">
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} type="button">
+                <GoogleIcon />
+                Sign in with Google
+            </Button>
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="m@example.com" {...register("email", { required: "Email is required" })} />
+                 {errors.email && <p className="text-destructive text-xs">{errors.email.message as string}</p>}
             </div>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="m@example.com" required />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" required />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full" onClick={handleSignIn}>Sign in</Button>
-          <div className="text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" className="underline text-primary">
-              Sign up
-            </Link>
-          </div>
-        </CardFooter>
+            <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" {...register("password", { required: "Password is required" })} />
+                {errors.password && <p className="text-destructive text-xs">{errors.password.message as string}</p>}
+            </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+            <Button className="w-full" type="submit">Sign in</Button>
+            <div className="text-center text-sm">
+                Don&apos;t have an account?{' '}
+                <Link href="/auth/signup" className="underline text-primary">
+                Sign up
+                </Link>
+            </div>
+            </CardFooter>
+        </form>
       </Card>
     </div>
   );
