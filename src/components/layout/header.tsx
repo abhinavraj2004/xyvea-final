@@ -16,10 +16,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
-import { Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Sidebar from '@/components/layout/sidebar';
+import { cn } from '@/lib/utils';
 
-export default function Header() {
+type HeaderProps = {
+  onToggleSidebar: () => void;
+  isSidebarVisible: boolean;
+};
+
+export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProps) {
   const { isLoggedIn, toggleLogin, setLoggedIn } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -52,6 +58,14 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
+          {isLoggedIn && (
+            <div className="hidden md:block">
+              <Button onClick={onToggleSidebar} variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle Sidebar</span>
+              </Button>
+            </div>
+          )}
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <span className="text-xl font-bold hidden sm:inline-block">Xyvea</span>
