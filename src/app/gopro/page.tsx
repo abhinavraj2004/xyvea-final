@@ -1,6 +1,9 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Heart } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const proFeatures = [
   "Private Causal Maps",
@@ -11,6 +14,22 @@ const proFeatures = [
 ];
 
 export default function GoProPage() {
+  const { toast } = useToast();
+
+  const handleUpgradeClick = () => {
+    toast({
+      title: 'Coming Soon!',
+      description: 'The Pro plan is not yet available, but thank you for your interest!',
+    });
+  };
+  
+  const handleDonateClick = () => {
+    toast({
+      title: 'Thank You!',
+      description: 'Donations are not yet active, but we appreciate your support!',
+    });
+  };
+
   return (
     <div className="container mx-auto max-w-7xl px-4 py-12">
       <div className="text-center">
@@ -44,9 +63,15 @@ export default function GoProPage() {
                 </li>
               ))}
             </ul>
-            <Button className="w-full mt-8 text-lg" size="lg">
-              Upgrade to Pro
-            </Button>
+            <div className="mt-8 flex flex-col gap-4">
+              <Button className="w-full text-lg" size="lg" onClick={handleUpgradeClick}>
+                Upgrade to Pro
+              </Button>
+              <Button className="w-full" variant="outline" onClick={handleDonateClick}>
+                <Heart className="mr-2 h-4 w-4" />
+                Donate
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
