@@ -8,8 +8,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { PlusCircle, MessageSquare, Settings, User, LogOut, Loader2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HistoryItem } from '@/types';
-import { useToast } from '@/hooks/use-toast';
-
 
 type SidebarProps = {
   isSheet?: boolean;
@@ -21,7 +19,6 @@ type SidebarProps = {
 export default function Sidebar({ isSheet = false, onLinkClick, isVisible = true }: SidebarProps) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
 
   const handleContribute = () => {
     router.push('/contribute');
@@ -45,10 +42,7 @@ export default function Sidebar({ isSheet = false, onLinkClick, isVisible = true
   }
 
   const handleDonateClick = () => {
-    toast({
-      title: 'Thank You!',
-      description: 'Donations are not yet active, but we appreciate your support!',
-    });
+    window.open('https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=abhinavrajutmi@gmail.com&item_name=Donation+for+Xyvea&currency_code=USD', '_blank');
     onLinkClick?.();
   };
 

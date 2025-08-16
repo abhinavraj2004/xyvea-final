@@ -24,10 +24,7 @@ export default function GoProPage() {
   };
   
   const handleDonateClick = () => {
-    toast({
-      title: 'Thank You!',
-      description: 'Donations are not yet active, but we appreciate your support!',
-    });
+    window.open('https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=abhinavrajutmi@gmail.com&item_name=Donation+for+Xyvea&currency_code=USD', '_blank');
   };
 
   return (

@@ -44,19 +44,19 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
   }
 
   const handleDonateClick = () => {
-    toast({
-      title: 'Thank You!',
-      description: 'Donations are not yet active, but we appreciate your support!',
-    });
+    window.open('https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=abhinavrajutmi@gmail.com&item_name=Donation+for+Xyvea&currency_code=USD', '_blank');
     setIsSheetOpen(false);
   };
 
   const LoggedOutButtons = () => (
-    <div className='flex items-center gap-2'>
-        <Button variant="ghost" onClick={() => handleNavigate('/auth/signin')}>
-            Log in
-        </Button>
-        <Button onClick={() => handleNavigate('/auth/signup')}>Sign up</Button>
+    <div className="mt-8 border-t pt-6">
+        <Button className="w-full" onClick={() => handleNavigate('/auth/signup')}>Sign Up</Button>
+        <div className="mt-4 text-center text-sm">
+            Already have an account?{' '}
+            <button onClick={() => handleNavigate('/auth/signin')} className="underline text-primary">
+                Log In
+            </button>
+        </div>
     </div>
   );
 
@@ -79,7 +79,7 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                   <span className="sr-only">Open Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-full sm:w-[320px] p-0">
+              <SheetContent side="left" className="w-full sm:w-[320px] p-0 flex flex-col">
                  <SheetHeader className="p-4 border-b">
                    <SheetTitle>
                     <div className="flex items-center gap-2">
@@ -104,15 +104,9 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                           </Button>
                       </div>
 
-                      <div className="mt-8 border-t pt-6">
-                        <Button className="w-full" onClick={() => handleNavigate('/auth/signup')}>Sign Up</Button>
-                        <div className="mt-4 text-center text-sm">
-                          Already have an account?{' '}
-                          <button onClick={() => handleNavigate('/auth/signin')} className="underline text-primary">
-                            Log In
-                          </button>
-                        </div>
-                      </div>
+                     <div className="mt-8">
+                        <LoggedOutButtons />
+                     </div>
                     </div>
                  )}
               </SheetContent>
@@ -167,9 +161,12 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-             <div className="hidden md:flex">
-                <LoggedOutButtons />
-             </div>
+             <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" onClick={() => handleNavigate('/auth/signin')}>
+                    Log in
+                </Button>
+                <Button onClick={() => handleNavigate('/auth/signup')}>Sign up</Button>
+            </div>
           )}
         </div>
       </div>
