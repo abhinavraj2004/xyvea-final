@@ -24,7 +24,7 @@ export default function GoProPage() {
   };
   
   const handleDonateClick = () => {
-    window.open('https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=abhinavrajutmi@gmail.com&item_name=Donation+for+Xyvea&currency_code=USD', '_blank');
+    window.open('https://buymeacoffee.com/xyvea', '_blank');
   };
 
   return (
