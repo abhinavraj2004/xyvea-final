@@ -16,9 +16,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/layout/logo';
 import { useAuth } from '@/hooks/use-auth';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Heart } from 'lucide-react';
 import Sidebar from '@/components/layout/sidebar';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 type HeaderProps = {
   onToggleSidebar: () => void;
@@ -29,6 +30,7 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -40,6 +42,14 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
     setIsSheetOpen(false);
     router.push('/');
   }
+
+  const handleDonateClick = () => {
+    toast({
+      title: 'Thank You!',
+      description: 'Donations are not yet active, but we appreciate your support!',
+    });
+    setIsSheetOpen(false);
+  };
 
   const LoggedOutButtons = () => (
     <div className='flex items-center gap-2'>
@@ -89,9 +99,12 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                           <Button variant="ghost" className="justify-start text-lg" onClick={() => handleNavigate('/gopro')}>
                             Go Pro
                           </Button>
+                          <Button variant="ghost" className="justify-start text-lg" onClick={handleDonateClick}>
+                            <Heart className="mr-2 h-5 w-5" /> Donate
+                          </Button>
                       </div>
 
-                      <div className="border-t pt-4 mt-4">
+                      <div className="mt-8 border-t pt-6">
                         <Button className="w-full" onClick={() => handleNavigate('/auth/signup')}>Sign Up</Button>
                         <div className="mt-4 text-center text-sm">
                           Already have an account?{' '}
@@ -119,6 +132,9 @@ export default function Header({ onToggleSidebar, isSidebarVisible }: HeaderProp
                 </Button>
                 <Button variant="ghost" onClick={() => handleNavigate('/gopro')}>
                     Go Pro
+                </Button>
+                <Button variant="ghost" onClick={handleDonateClick}>
+                    <Heart className="mr-2 h-4 w-4" /> Donate
                 </Button>
            </div>
 

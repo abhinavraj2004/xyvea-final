@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import { PlusCircle, MessageSquare, Settings, User, LogOut, Loader2 } from 'lucide-react';
+import { PlusCircle, MessageSquare, Settings, User, LogOut, Loader2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HistoryItem } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 
 type SidebarProps = {
@@ -20,6 +21,7 @@ type SidebarProps = {
 export default function Sidebar({ isSheet = false, onLinkClick, isVisible = true }: SidebarProps) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleContribute = () => {
     router.push('/contribute');
@@ -42,12 +44,24 @@ export default function Sidebar({ isSheet = false, onLinkClick, isVisible = true
     onLinkClick?.();
   }
 
+  const handleDonateClick = () => {
+    toast({
+      title: 'Thank You!',
+      description: 'Donations are not yet active, but we appreciate your support!',
+    });
+    onLinkClick?.();
+  };
+
   const content = (
     <div className="flex flex-col h-full">
-      <div className="p-4">
+      <div className="p-4 space-y-2">
         <Button className="w-full" onClick={handleContribute}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Contribute
+        </Button>
+         <Button className="w-full" variant="outline" onClick={handleDonateClick}>
+          <Heart className="mr-2 h-4 w-4 text-red-500" />
+          Donate
         </Button>
       </div>
       <div className="flex-1 flex flex-col px-2">
