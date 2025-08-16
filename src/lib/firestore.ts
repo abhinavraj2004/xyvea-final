@@ -1,6 +1,6 @@
 // This file handles all user-related data interactions with Cloud Firestore.
 
-import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, getDocs, collection, query, where, orderBy, limit, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Contribution, ContributionStats } from '@/types';
 
@@ -72,4 +72,22 @@ export const getUserContributions = async (userId: string): Promise<{ contributi
   };
 
   return Promise.resolve({ contributions, stats });
+};
+
+/**
+ * Updates a user's reputation score.
+ * @param userId - The ID of the user to update.
+ * @param amount - The amount to increment the reputation by (can be negative).
+ * @returns {Promise<void>}
+ */
+export const updateUserReputation = async (userId: string, amount: number): Promise<void> => {
+  if (!userId) return;
+  console.log(`FIRESTORE_SERVICE: Updating reputation for user ${userId} by ${amount}`);
+  const userRef = doc(db, 'users', userId);
+  try {
+    await setDoc(userRef, { reputation: increment(amount) }, { merge: true });
+  } catch (error) {
+    console.error(`Failed to update reputation for user ${userId}:`, error);
+    // Optionally re-throw or handle the error as needed
+  }
 };
